@@ -66,4 +66,6 @@ Progress is specific to this browser and device. Clearing site data deletes it. 
 
 Settings includes an explicit confirmation before replacing a round. The interface respects reduced motion, uses keyboard-accessible controls, and includes optional procedural rain audio.
 
-The generated city artwork is stored in [`public/art/blackwater-city.png`](public/art/blackwater-city.png). Its tool and production prompt are documented in [assets.md](docs/assets.md).
+The current UI uses a black-and-white handheld-RPG style with larger text and a top-down pixel map. Read [Chapter 6](docs/06-readable-pixel-ui.md) to learn how the redesign works.
+
+The current generated map is stored in [`public/art/blackwater-pixel.png`](public/art/blackwater-pixel.png). Its tool and production prompt are documented in [assets.md](docs/assets.md). The original painted map is retained as an earlier asset.

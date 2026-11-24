@@ -3,59 +3,52 @@
   [class.expanded]="expanded()"
   aria-label="Interactive district map of Blackwater"
 >
-  <div class="map-world" [style.transform]="'scale(' + zoom() + ')'">
-    <div
-      class="city-art"
-      role="img"
-      aria-label="Rain-soaked 1930s Blackwater: brick neighborhoods, City Hall, warehouses, and a working harbor at night"
-    ></div>
-    <div class="territory-ring"></div>
-    @for (district of districts; track district.id) {
-      <button
-        class="district-pin"
-        [class.home]="district.id === 'italy'"
-        [class.active]="selected() === district.id"
-        [style.left.%]="district.x"
-        [style.top.%]="district.y"
-        (click)="selected.set(district.id)"
-        [attr.aria-label]="district.name + ': ' + district.type"
-        [attr.aria-pressed]="selected() === district.id"
-      >
-        <span class="pin-symbol"><o-icon [name]="district.icon" /></span>
-        <span class="pin-name">{{ district.name }}</span>
-        @if (district.id === "italy") {
-          <span class="pin-sub">YOUR TERRITORY</span>
-        }
-      </button>
-    }
-    <span class="water-label">BLACKWATER HARBOR</span>
-  </div>
-  <div class="map-vignette"></div>
-  <div class="map-top">
+  <header class="map-top">
     <div>
-      <span class="map-kicker">EST. 1891</span>
+      <span class="map-kicker">DISTRICT 01</span>
       <h3>Blackwater</h3>
       <span class="map-sub">A city that never tells.</span>
     </div>
-    <span class="weather"><o-icon name="rain" /> 11° <i></i> LIGHT RAIN</span>
-  </div>
-  <div class="compass" aria-hidden="true">
-    <span>N</span
-    ><svg viewBox="0 0 40 40">
-      <path d="m20 3 5 17-5 17-5-17Z" fill="none" stroke="currentColor" />
-      <path d="m20 3 5 17h-5Z" fill="currentColor" />
-      <path d="M3 20h34" stroke="currentColor" opacity=".4" />
-    </svg>
+    <span class="weather"
+      ><o-icon name="rain" />11°<i></i
+      ><span class="weather-label">LIGHT RAIN</span></span
+    >
+  </header>
+  <div class="map-viewport">
+    <div class="map-world" [style.transform]="'scale(' + zoom() + ')'">
+      <div
+        class="city-art"
+        role="img"
+        aria-label="Black-and-white, top-down pixel-art map of 1930s Blackwater: neighborhood streets, City Hall, warehouses, and a working harbor"
+      ></div>
+      @for (district of districts; track district.id) {
+        <button
+          class="district-pin"
+          [class.home]="district.id === 'italy'"
+          [class.active]="selected() === district.id"
+          [style.left.%]="district.x"
+          [style.top.%]="district.y"
+          (click)="selected.set(district.id)"
+          [attr.aria-label]="district.name + ': ' + district.type"
+          [attr.aria-pressed]="selected() === district.id"
+        >
+          <span class="pin-symbol"><o-icon [name]="district.icon" /></span>
+          <span class="pin-name">{{ district.name }}</span>
+          @if (district.id === "italy") {
+            <span class="pin-sub">YOUR BLOCK</span>
+          }
+        </button>
+      }
+    </div>
   </div>
   <div class="district-card">
     <div class="district-meta">
-      <span class="status-dot" [class.enemy]="selected() === 'ash'"></span
-      >{{ district().type }}
+      <span class="status-dot"></span>{{ district().type }}
     </div>
     <h4>{{ district().name }}</h4>
     <p>{{ district().description }}</p>
     <button (click)="navigate.emit(district().view)">
-      {{ district().action }} <o-icon name="arrow" />
+      {{ district().action }}<o-icon name="arrow" />
     </button>
   </div>
   <div class="map-bottom">

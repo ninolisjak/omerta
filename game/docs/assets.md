@@ -1,6 +1,14 @@
 # Visual assets
 
-`public/art/blackwater-city.png` is original generated production artwork used by the interactive map and cropped front/empire cards. It was created with the built-in **imagegen** tool, then copied into this project. No external image request is needed at runtime. UI icons are code-native SVG paths in `ui/icon.component.ts`.
+The current map and cropped front/empire cards use `public/art/blackwater-pixel.png`, an original monochrome top-down pixel-art image created with the built-in **imagegen** tool. No external image request is needed at runtime. UI icons are code-native SVG paths in `ui/icon.component.ts`.
+
+## Current pixel map: production prompt
+
+> Use case: stylized-concept. Asset type: original production pixel-art tile-map for Omertà, a noir mafia browser strategy game. Create a strictly BLACK AND WHITE / GRAYSCALE top-down 2D 1930s port-town map inspired by early handheld monster-catching JRPG overworlds. Original architecture and sprites, no recognizable existing characters or copied locations. Landscape aspect 3:2. Render as genuine crisp low-resolution pixel art, effective resolution 384x256 enlarged with nearest neighbor: visible square pixels, grid-aligned 16x16 tiles, four-to-six grayscale tones only (#141414, #555555, #909090, #cccccc, #fafafa). Flat orthographic overhead with building front facades visible in the classic top-down 2D RPG convention; absolutely NOT isometric or 3D. Composition: neighborhood blocks separated by broad readable grid streets with dashed white lane markings and sidewalks. Left half: a little residential neighborhood with distinct safehouse, 1930s speakeasy with striped awning, tailor shop, and pool hall; each building is two stories with tiled roofs. Upper center: a larger old city hall with front steps and a tiny plaza. Upper right: a rival neighborhood of brick workshops, crates and chain-link fences. Lower right: gray rippled harbor water with timber dock, warehouses, and small steam boat. Lower center: a canal and stone bridge. Include a few very small original fedora-wearing gangster NPC sprites and boxy 1930s cars, monochrome trees, lamp posts, crates. A coherent walkable game neighborhood with roads connecting the districts. Clear tile shapes, bold black outlines, small repeating pixel textures, restrained checkerboard dithering, bright pale gray sidewalks and dark roofs. No smooth gradients, no antialiasing, no painted texture, no photographic detail, no blur, no realistic render, no grain. It must look like an actual nostalgic playable 2D handheld videogame map. No UI, no frame, no words, no lettering, no district labels, no pins. Full bleed.
+
+## Earlier painted map
+
+`public/art/blackwater-city.png` is retained from the original checkpoint but is no longer used by the interface. It was also created with the built-in **imagegen** tool.
 
 Final production prompt:
 

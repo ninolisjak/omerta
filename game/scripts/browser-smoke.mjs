@@ -10,7 +10,7 @@ const browser = await chromium.launch({
   headless: true,
 });
 const context = await browser.newContext({
-  viewport: { width: 1440, height: 1080 },
+  viewport: { width: 1920, height: 1080 },
   reducedMotion: "reduce",
 });
 const page = await context.newPage();
@@ -42,6 +42,19 @@ try {
     ),
     true,
   );
+
+  await page
+    .locator(".sidebar")
+    .getByRole("button", { name: "Your fronts", exact: false })
+    .click();
+  await page.screenshot({
+    path: ".local/screenshots/fronts-desktop.png",
+    fullPage: true,
+  });
+  await page
+    .locator(".sidebar")
+    .getByRole("button", { name: "Overview", exact: true })
+    .click();
 
   await page.getByRole("button", { name: "Ash Row: RIVAL CREW" }).click();
   await expect(page.locator(".district-card h4")).toHaveText("Ash Row");
@@ -107,10 +120,7 @@ try {
   ]) {
     await page.getByRole("tab", { name: title, exact: false }).click();
   }
-  assert.match(
-    await page.getByRole("tabpanel").innerText(),
-    /production server/,
-  );
+  await expect(page.getByRole("tabpanel")).toContainText("production server");
   await page.keyboard.press("Escape");
   assert.equal(await page.locator("dialog").isVisible(), false);
 
@@ -124,10 +134,14 @@ try {
     "The Families",
     "Street reports",
   ];
-  for (const width of [1440, 1024, 768, 390, 320]) {
+  for (const width of [1920, 1440, 1024, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 940 });
     for (const name of nav) {
-      if (width <= 580)
+      if (
+        await page
+          .getByRole("button", { name: "Toggle navigation" })
+          .isVisible()
+      )
         await page.getByRole("button", { name: "Toggle navigation" }).click();
       await page
         .locator(".sidebar")
@@ -156,6 +170,31 @@ try {
         });
       }
       assert.equal(fits, true, `${name} overflows at ${width}px`);
+
+      const smallText = await page.locator("main").evaluate((main) =>
+        [...main.querySelectorAll("*")]
+          .filter(
+            (element) =>
+              element.getBoundingClientRect().width > 0 &&
+              [...element.childNodes].some(
+                (node) =>
+                  node.nodeType === Node.TEXT_NODE && node.textContent.trim(),
+              ),
+          )
+          .filter(
+            (element) =>
+              Number.parseFloat(getComputedStyle(element).fontSize) < 12,
+          )
+          .map((element) => ({
+            class: element.className,
+            size: getComputedStyle(element).fontSize,
+          })),
+      );
+      assert.deepEqual(
+        smallText,
+        [],
+        `${name} has unreadably small text at ${width}px`,
+      );
     }
   }
   await page.setViewportSize({ width: 390, height: 844 });
@@ -191,7 +230,7 @@ try {
   await expect(page.locator(".resource").first()).toContainText("2,450");
   assert.equal(errors.length, 0, `Browser errors: ${errors.join("; ")}`);
   console.log(
-    "PASS: build, laundering, job, reload, guide, reset, all seven views at five widths, no browser errors.",
+    "PASS: map, build, laundering, job, reload, guide, reset, save recovery; all seven views at six widths; text >=12px; no browser errors.",
   );
   console.log("Screenshots: .local/screenshots/desktop.png and mobile.png");
 } finally {

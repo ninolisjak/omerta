@@ -34,7 +34,7 @@ Create a portfolio-quality Angular project, learn through explained changes, and
 
 A fictional port city: speakeasies, warehouses, corrupt officials, old neighborhoods, and constant rain. Stylized noir rather than graphic realism.
 
-The redesigned HUD uses a command-desk layout: persistent navigation, a resource ledger, a spacious city map, an operations queue, and an intelligence column. Original isometric city art supplies atmosphere while controls remain readable. Mobile layouts stack panels and use a navigation drawer. Optional procedural rain audio ships in this prototype; a jazz soundtrack is later work.
+The redesigned HUD uses persistent navigation, a resource ledger, a spacious city map, an operations queue, and an intelligence column. The current art direction is black-and-white, top-down 2D pixel art inspired by classic handheld RPGs, with original mafia-town buildings, monochrome characters, and cars. Square borders and dialogue-style panels match the map. Body text is 15–16 pixels; labels never fall below 12 pixels. Mobile layouts stack panels and use a navigation drawer without shrinking the text. Optional procedural rain audio ships in this prototype; a jazz soundtrack is later work.
 
 ## 5. Core loop
 
