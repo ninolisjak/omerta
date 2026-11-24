@@ -1,0 +1,9 @@
+# Visual assets
+
+`public/art/blackwater-city.png` is original generated production artwork used by the interactive map and cropped front/empire cards. It was created with the built-in **imagegen** tool, then copied into this project. No external image request is needed at runtime. UI icons are code-native SVG paths in `ui/icon.component.ts`.
+
+Final production prompt:
+
+> Use case: stylized-concept. Asset type: production background artwork for a browser strategy game's interactive city map, landscape 1536x1024. Create an exquisitely detailed isometric aerial miniature of a fictional 1930s American port city at night, cinematic noir, realistic hand-painted architectural game concept art. A dense city peninsula with brick tenements and varied four-to-eight-story buildings, an ornate green-domed courthouse near center, warm lit speakeasy windows, factory chimneys and red-brick warehouses at right, docks and an old cargo steamship at bottom right, water surrounding bottom and right, bridges, railway sidings, winding wet cobbled streets reflecting little warm amber streetlights. Elevated three-quarter aerial camera, city fills almost the whole frame with no sky and no horizon. Restrained near-monochrome charcoal, sage gray stone and green-black water, subtle warm ivory lamps and a few muted red neon storefronts. Rain-slick moody atmosphere with soft fog around edges, very high detail, fine grain, expensive illustrated strategy game aesthetic. Legible individual buildings and clear streets, realistic scale, no cartoon, no fantasy, no modern skyscrapers, no UI, no words, no labels, no pins, no borders, no logos. Full bleed, coherent single city.
+
+The image is atmosphere, not authoritative map data. District buttons and ownership information are rendered separately in Angular. Rain audio is generated locally using filtered noise through the Web Audio API; there is no sampled soundtrack.

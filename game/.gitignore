@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.angular/
+.sites-workflow/
+*.log
+playwright-report/
+test-results/
+.local/

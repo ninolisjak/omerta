@@ -1,0 +1,26 @@
+# Generated dependencies, builds, and caches
+node_modules/
+dist/
+.angular/
+.local/
+.sites-workflow/
+playwright-report/
+test-results/
+*.log
+
+# Secrets and machine-specific configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.aws/
+.codex/
+.agents/
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
