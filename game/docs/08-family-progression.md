@@ -36,6 +36,8 @@ When a job or laundering batch is queued, the operation captures the current `fa
 
 Every completed job grants its configured XP once. The operation is removed after completion, so reloading does not award it again. Laundering progress counts clean money actually paid out, not the dirty amount submitted.
 
+With team planning, each deployed team completes one job. A three-team collection therefore earns 75 Family XP and advances job contracts by three. Support enforcers and drivers do not multiply XP; they change Heat and travel. The dispatch stores the quoted outcome, so the team count and reward do not change while that operation is away.
+
 ## Transfer money; do not copy it
 
 A contribution subtracts a positive whole-dollar amount from personal clean money and adds the same amount to the treasury. It does not create money or XP. Headquarters purchases spend treasury money. Family contracts award treasury money and XP when claimed, and a claimed contract cannot be claimed again.

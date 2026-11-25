@@ -80,6 +80,8 @@ The first five fronts can reach level 5. Construction is one at a time. Costs sc
 
 Start with 3 runners, 2 enforcers, and 1 driver. One recruit trains at a time. Assigned units are unavailable until their job finishes.
 
+Crew quantity now affects the solo loop. Each deployment can contain 1–10 teams: one runner per collection team, one runner plus one smuggler per shipping team, or two enforcers per rival-hit team. Each team completes one job and scales money, Respect, Family XP, and job-contract progress. Up to three deployments can run simultaneously, reserving their actual crew. Optional extra enforcers reduce Heat, and one driver per team supplies full travel coverage; partial coverage gives a proportional bonus. Job cards show the full quote before dispatch, and ongoing jobs keep their saved outcomes. See [the crew-planning lesson](10-crew-and-job-planning.md).
+
 ## 9. Heat
 
 Jobs create Heat. Base decay is 1.5 per minute; office levels add 0.5 per minute each. Laundering removes 4, laying low removes 20 after 25 seconds, and a bribe removes 25 for $200 clean plus a Favor.

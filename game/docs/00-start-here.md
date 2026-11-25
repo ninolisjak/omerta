@@ -24,6 +24,8 @@ Continue with [6. A readable pixel-art interface](06-readable-pixel-ui.md) for t
 
 The latest completed work is explained in [7. Feature components](07-feature-components.md), [8. Family progression](08-family-progression.md), and [9. Dark mode and game feedback](09-dark-mode-and-game-feedback.md). You can now found and grow a Family on your own. Its XP, treasury, contracts, and upgrades save alongside your personal game.
 
+[10. Crew and job planning](10-crew-and-job-planning.md) explains how recruiting more people now scales job returns, supports parallel deployments, improves driver coverage, and reduces Heat through enforcer cover.
+
 Read [the design document](game-design.md) for the complete game vision and the difference between the PDF’s planned MVP and this first playable build.
 
 ## The first ten minutes

@@ -111,7 +111,7 @@ Keep the monochrome, top-down pixel-art direction throughout. Readability and ph
 
 ## Phase 5 — Real solo targets, travel, and shipments
 
-**Goal:** turn the fixed-reward jobs into a deeper solo strategy loop.
+**Goal:** expand the scalable, deterministic solo jobs into a deeper world and combat loop. Team planning, enforcer cover, and three parallel street deployments are already implemented; see [crew planning](10-crew-and-job-planning.md).
 
 - [ ] Represent districts and NPC targets as data with coordinates and descriptions.
 - [ ] Calculate travel time from distance and assigned crew; show outbound and returning operations.

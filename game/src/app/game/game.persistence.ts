@@ -1,4 +1,4 @@
-import { BUILDINGS, CREW, JOBS } from "./game.config.ts";
+import { BUILDINGS, CREW, JOBS, RULES } from "./game.config.ts";
 import {
   FAMILY_CONTRACTS,
   FAMILY_RULES,
@@ -52,7 +52,7 @@ function validBase(value: unknown): value is GameState {
     return false;
   if (
     !Array.isArray(s.operations) ||
-    s.operations.length > 5 ||
+    s.operations.length > RULES.maxStreetJobs + 3 ||
     !Array.isArray(s.journal) ||
     s.journal.length > 30
   )
@@ -62,7 +62,7 @@ function validBase(value: unknown): value is GameState {
     if (
       !op ||
       !["build", "recruit", "job", "launder", "laylow"].includes(op.kind) ||
-      kinds.has(op.kind) ||
+      (op.kind !== "job" && kinds.has(op.kind)) ||
       typeof op.id !== "string" ||
       typeof op.label !== "string" ||
       typeof op.target !== "string" ||
@@ -78,6 +78,24 @@ function validBase(value: unknown): value is GameState {
       return false;
     if (op.kind === "job" && !JOBS.some((j) => j.id === op.target))
       return false;
+    if (op.jobOutcome !== undefined) {
+      const outcome = op.jobOutcome;
+      if (
+        op.kind !== "job" ||
+        !outcome ||
+        typeof outcome !== "object" ||
+        ![
+          outcome.teams,
+          outcome.reward,
+          outcome.respect,
+          outcome.heat,
+          outcome.familyXp,
+        ].every((n) => Number.isSafeInteger(n) && n >= 0) ||
+        outcome.teams < 1 ||
+        outcome.teams > RULES.maxTeamsPerJob
+      )
+        return false;
+    }
     if (
       op.kind === "launder" &&
       (!number(Number(op.target)) || Number(op.target) > 800)
@@ -95,6 +113,24 @@ function validBase(value: unknown): value is GameState {
     )
       return false;
   }
+  if (new Set(s.operations.map((op) => op.id)).size !== s.operations.length)
+    return false;
+  if (
+    s.operations.filter((op) => op.kind === "job").length >
+      RULES.maxStreetJobs ||
+    (kinds.has("job") && kinds.has("laylow"))
+  )
+    return false;
+  if (
+    CREW.some(
+      (unit) =>
+        s.operations.reduce(
+          (total, op) => total + (op.crew?.[unit.id] ?? 0),
+          0,
+        ) > s.crew[unit.id],
+    )
+  )
+    return false;
   return s.journal.every(
     (e) =>
       e &&

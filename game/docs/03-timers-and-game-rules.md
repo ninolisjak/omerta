@@ -34,11 +34,11 @@ Income is capped by safehouse storage. Heat never falls below zero. Time resolut
 
 ## Separate queues
 
-One construction, one recruitment, one laundering batch, and one street operation may run at once. A job and laying low share the street slot. You can build while a runner collects money.
+One construction, one recruitment, one laundering batch, and up to three street jobs may run at once. Each deployment can contain 1–10 teams, limited by available crew. Laying low is exclusive with all street jobs, so crews must return before laying low. You can still build and launder while crews are out.
 
 Assigned crew remains in the total roster but is subtracted by `availableCrew()`. Completion removes the operation, which makes the crew available again. There is no “return crew” increment that could run twice.
 
-An available driver is attached automatically and reduces a job duration by 20%. Police arrest only an idle enforcer, so an assigned crew remains internally consistent.
+Drivers attach automatically, up to one per team. Full coverage shortens travel by 20%; partial coverage gives a proportional bonus. Enforcers assigned as cover reduce a deployment's Heat. Police arrest only an idle enforcer, so an assigned crew remains internally consistent. [Chapter 10](10-crew-and-job-planning.md) explains the team calculation and saved payout quotes.
 
 ## Police checks
 

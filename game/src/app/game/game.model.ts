@@ -16,6 +16,24 @@ export interface Operation {
   endsAt: number;
   crew?: Partial<Record<CrewId, number>>;
   familyId?: string;
+  jobOutcome?: JobOutcome;
+}
+export interface JobOutcome {
+  teams: number;
+  reward: number;
+  respect: number;
+  heat: number;
+  familyXp: number;
+}
+export interface JobAssignment {
+  teams?: number;
+  escorts?: number;
+}
+export interface JobPreview extends JobOutcome {
+  seconds: number;
+  drivers: number;
+  escorts: number;
+  crew: Partial<Record<CrewId, number>>;
 }
 export interface Entry {
   id: string;
@@ -101,5 +119,5 @@ export type GameCommand =
   | FamilyCommand
   | { type: "build"; target: BuildingId }
   | { type: "recruit"; target: CrewId }
-  | { type: "job"; target: JobId }
+  | ({ type: "job"; target: JobId } & JobAssignment)
   | { type: "launder" | "bribe" | "laylow" };

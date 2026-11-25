@@ -31,6 +31,9 @@ import { countdown, progress } from "../ui/format";
                 ></i>
               </div>
               <span class="operation-type">{{ labels[op.kind] }}</span>
+              @if (op.kind === "job" && op.crew) {
+                <span class="operation-crew">{{ crewSummary(op) }}</span>
+              }
             </div>
           </div>
         }
@@ -52,6 +55,11 @@ export class OperationsComponent {
   readonly now = input.required<number>();
   readonly countdown = countdown;
   readonly progress = progress;
+  crewSummary(op: Operation): string {
+    return Object.entries(op.crew ?? {})
+      .map(([id, count]) => `${count} ${id}${count! > 1 ? "s" : ""}`)
+      .join(" · ");
+  }
   readonly icons = {
     build: "building",
     recruit: "crew",

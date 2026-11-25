@@ -321,7 +321,110 @@ try {
     }
   }
   await page.setViewportSize({ width: 1440, height: 1080 });
-  // Seed damage before application startup, after the old page's pagehide save.
+  // Recruitment must increase real job capacity, not just the roster counter.
+  await page
+    .locator(".sidebar")
+    .getByRole("button", { name: "Your fronts", exact: false })
+    .click();
+  const poolhall = page
+    .locator(".front-card")
+    .filter({ has: page.getByRole("heading", { name: "Eight Ball Social" }) });
+  await poolhall.getByRole("button", { name: "Establish front" }).click();
+  await page.clock.fastForward(21_000);
+  await expect(poolhall).toContainText("LEVEL 1");
+  await page
+    .locator(".sidebar")
+    .getByRole("button", { name: "The crew", exact: false })
+    .click();
+  const runners = page
+    .locator(".crew-card")
+    .filter({
+      has: page.getByRole("heading", { name: "Runner", exact: true }),
+    });
+  await runners.getByRole("button", { name: "Recruit runner" }).click();
+  await page.clock.fastForward(16_000);
+  await expect(runners.locator(".unit-count")).toContainText("4");
+  await page
+    .locator(".sidebar")
+    .getByRole("button", { name: "Rackets & jobs", exact: false })
+    .click();
+  const collectionCard = page.locator(".job-card").first();
+  await collectionCard.getByRole("button", { name: "Use max · 4" }).click();
+  await expect(collectionCard.locator(".job-rewards")).toContainText("1,200");
+  await expect(collectionCard.locator(".job-rewards")).toContainText("+32");
+  await page.getByLabel("Enforcer cover for A friendly reminder").fill("2");
+  await expect(collectionCard.locator(".job-rewards")).toContainText("+28");
+  await expect(collectionCard.locator(".job-family-reward")).toContainText(
+    "100 FAMILY XP",
+  );
+  await expect(collectionCard.locator(".job-requirements")).toContainText(
+    "4 runners",
+  );
+  await page.locator("main h1").click();
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+  await page.screenshot({
+    path: ".local/screenshots/crew-planner-desktop.png",
+    fullPage: true,
+  });
+  for (const width of [1920, 1440, 1024, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 940 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+      true,
+      `Crew planner overflows at ${width}px`,
+    );
+    if (width === 390)
+      await page.screenshot({
+        path: ".local/screenshots/crew-planner-mobile.png",
+        fullPage: true,
+      });
+  }
+  await page.setViewportSize({ width: 1440, height: 1080 });
+  await collectionCard.getByRole("button", { name: "Send the crew" }).click();
+  await page.clock.fastForward(29_000);
+  await expect(page.locator(".family-progress-strip .level-chip")).toHaveText(
+    "LV. 3",
+  );
+  await expect(page.locator(".street-slots > strong")).toHaveText("0 / 3");
+  await page
+    .getByLabel("Teams for A friendly reminder", { exact: true })
+    .fill("1");
+  await page.getByLabel("Enforcer cover for A friendly reminder").fill("0");
+  for (let deployment = 0; deployment < 3; deployment++) {
+    await collectionCard
+      .getByRole("button", {
+        name: deployment ? "Send another crew" : "Send the crew",
+      })
+      .click();
+  }
+  await expect(page.locator(".street-slots > strong")).toHaveText("3 / 3");
+  await expect(page.locator(".operation-row")).toHaveCount(3);
+  await expect(collectionCard).toContainText(
+    "All 3 street operation slots are busy.",
+  );
+  await page.reload();
+  await page
+    .locator(".sidebar")
+    .getByRole("button", { name: "Rackets & jobs", exact: false })
+    .click();
+  await expect(page.locator(".operation-row")).toHaveCount(3);
+  await page.clock.fastForward(31_000);
+  await expect(page.locator(".operation-row")).toHaveCount(0);
+  await page
+    .locator(".sidebar")
+    .getByRole("button", { name: "The crew", exact: false })
+    .click();
+  await expect(
+    page
+      .locator(".crew-card")
+      .filter({
+        has: page.getByRole("heading", { name: "Runner", exact: true }),
+      })
+      .locator(".unit-count"),
+  ).toContainText("4");
+  // Seed damage before startup, after the old page's pagehide save.
   await page.addInitScript(() =>
     localStorage.setItem("omerta.game.v1", "{invalid-json"),
   );
@@ -357,7 +460,7 @@ try {
   await motionPage.close();
   assert.equal(errors.length, 0, `Browser errors: ${errors.join("; ")}`);
   console.log(
-    "PASS: solo loop, Family founding, XP, level-up, contract, upgrade, contribution, reload, save recovery; all screens at six widths; text >=12px; no browser errors.",
+    "PASS: solo/Family loops; recruiting changes team capacity and payouts; cover changes Heat; three jobs survive reload and return crew; responsive and motion checks pass; no browser errors.",
   );
   console.log("Screenshots: .local/screenshots/desktop.png and mobile.png");
 } finally {

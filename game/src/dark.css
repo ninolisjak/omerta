@@ -471,6 +471,302 @@ body .skip-link {
   height: 17px;
 }
 
+.deployment-intro {
+  display: flex;
+  gap: 25px;
+  align-items: center;
+  padding: 25px;
+  margin-bottom: 27px;
+}
+.deployment-intro > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.deployment-intro h2 {
+  font-size: 25px;
+  margin: 7px 0 12px;
+  line-height: 1.5;
+}
+.deployment-intro p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.9;
+  max-width: 850px;
+}
+.street-slots {
+  border-left: 1px solid #606060;
+  padding-left: 25px;
+  min-width: 185px;
+}
+.street-slots > span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.street-slots > strong {
+  font-size: 30px;
+  display: block;
+}
+.street-slots > div {
+  display: flex;
+  gap: 7px;
+  margin-top: 9px;
+}
+.street-slots i {
+  width: 30px;
+  height: 8px;
+  border: 1px solid #777;
+  background: #252525;
+}
+.street-slots i.busy {
+  background: #ddd;
+}
+.squad-planner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  border-top: 1px solid #555;
+  padding: 19px 0;
+}
+.squad-choice {
+  min-width: 0;
+}
+.squad-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 7px;
+  margin-bottom: 9px;
+  min-height: 45px;
+}
+.squad-label label {
+  font-size: 13px;
+  margin: 0;
+}
+.squad-label > button,
+.squad-label > span {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.squad-label > button {
+  background: none;
+  border: 0;
+  color: #ddd;
+  text-decoration: underline;
+  padding: 0;
+  text-align: right;
+}
+.squad-label > button:disabled {
+  color: #929292;
+}
+.squad-label > span {
+  color: var(--muted);
+  text-align: right;
+}
+.squad-stepper {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 38px;
+  border: 1px solid #7d7d7d;
+  min-width: 0;
+}
+.squad-stepper button {
+  display: grid;
+  place-items: center;
+  padding: 8px 5px;
+  background: #303030;
+  color: #eee;
+  border: 0;
+  min-height: 43px;
+}
+.squad-stepper button:disabled {
+  color: #8f8f8f;
+  background: #232323;
+}
+.squad-stepper button:not(:disabled):hover {
+  background: #494949;
+}
+.squad-stepper button > o-icon {
+  width: 17px;
+  height: 17px;
+}
+.squad-stepper input {
+  text-align: center;
+  border: 0;
+  border-inline: 1px solid #666;
+  padding: 9px 2px;
+  min-height: 43px;
+  font-size: 17px;
+  font-weight: bold;
+  border-radius: 0;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.squad-stepper input::-webkit-inner-spin-button,
+.squad-stepper input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.squad-choice > p {
+  font-size: 12px;
+  line-height: 1.8;
+  margin-top: 9px;
+  color: var(--muted);
+}
+.driver-coverage {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 11px;
+  background: #2a2a2a;
+  border: 1px solid #505050;
+  margin-bottom: 17px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #ccc;
+}
+.driver-coverage > o-icon {
+  width: 17px;
+  height: 17px;
+  margin-top: 3px;
+}
+.squad-storage-warning {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 1.8;
+  border-left: 2px solid #aaa;
+  padding-left: 10px;
+  margin-bottom: 15px;
+  color: #ddd;
+}
+.squad-storage-warning > o-icon {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+}
+.crew-use-case {
+  font-size: 13px;
+  line-height: 1.8;
+  padding: 14px 0 19px;
+  color: #d2d2d2;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+.crew-use-case > o-icon {
+  width: 17px;
+  height: 17px;
+  margin-top: 3px;
+}
+.operation-crew {
+  display: block;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #bbb;
+  margin-top: 6px;
+}
+@media (min-width: 641px) and (max-width: 1450px) {
+  .job-card > p:not(.action-hint):not(.squad-storage-warning) {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  .job-card .job-family-reward {
+    grid-column: 1;
+    grid-row: 4;
+    align-self: start;
+  }
+  .job-card .squad-planner {
+    grid-column: 1;
+    grid-row: 5/8;
+    border-top: 0;
+    padding: 0;
+    margin-top: 8px;
+  }
+  .job-card .job-rewards {
+    grid-column: 2;
+    grid-row: 3;
+  }
+  .job-card .driver-coverage {
+    grid-column: 2;
+    grid-row: 4;
+  }
+  .job-card .job-requirements {
+    grid-column: 2;
+    grid-row: 5;
+  }
+  .job-card > .button {
+    grid-column: 2;
+    grid-row: 7;
+  }
+  .job-card > .squad-storage-warning {
+    grid-column: 2;
+    grid-row: 6;
+  }
+  .job-card > .action-hint {
+    grid-column: 2;
+    grid-row: 8;
+  }
+}
+@media (max-width: 640px) {
+  .deployment-intro {
+    padding: 23px 20px;
+    flex-wrap: wrap;
+    gap: 21px;
+  }
+  .deployment-intro h2 {
+    font-size: 24px;
+  }
+  .street-slots {
+    border-left: 0;
+    border-top: 1px solid #606060;
+    padding: 17px 0 0;
+    width: 100%;
+  }
+  .street-slots > strong {
+    display: inline;
+    font-size: 24px;
+    margin-left: 16px;
+  }
+  .street-slots > div {
+    margin-top: 13px;
+  }
+  .squad-planner {
+    gap: 13px;
+  }
+  .squad-label {
+    display: block;
+    min-height: 52px;
+  }
+  .squad-label > button,
+  .squad-label > span {
+    display: block;
+    margin-top: 4px;
+    text-align: left;
+  }
+  .squad-stepper {
+    grid-template-columns: 35px minmax(0, 1fr) 35px;
+  }
+  .job-card > p.squad-storage-warning {
+    font-size: 12px;
+  }
+}
+@media (max-width: 370px) {
+  .squad-planner {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .squad-label {
+    display: flex;
+    min-height: 0;
+    margin-bottom: 11px;
+  }
+  .squad-label > button,
+  .squad-label > span {
+    margin-top: 0;
+    text-align: right;
+  }
+}
+
 /* A genuine checklist and Family progress supply goals instead of fake activity. */
 .first-steps {
   padding: 21px;

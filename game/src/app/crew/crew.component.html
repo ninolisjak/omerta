@@ -4,8 +4,10 @@
     <span class="eyebrow">THE LISJAK CREW</span>
     <h2>{{ game.crewCount() }} men. One word: loyalty.</h2>
     <p>
-      Crew assigned to a job return when it finishes. An available driver joins
-      automatically and shortens travel by 20%.
+      More people means bigger deployments and more work at once. Build up to
+      {{ rules.maxTeamsPerJob }} teams per job and run
+      {{ rules.maxStreetJobs }} street operations together. Crew are reserved
+      while away and return when their deployment finishes.
     </p>
   </div>
 </div>
@@ -34,6 +36,9 @@
       <span class="eyebrow">{{ unit.role }}</span>
       <h2>{{ unit.name }}</h2>
       <p>{{ unit.description }}</p>
+      <div class="crew-use-case">
+        <o-icon name="bolt" />{{ useCase(unit.id) }}
+      </div>
       <div class="front-cost">
         <span><o-icon name="wallet" /> ${{ unit.cost }}</span
         ><span><o-icon name="clock" /> {{ unit.seconds }}s base</span>

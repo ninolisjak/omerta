@@ -19,6 +19,12 @@ export const RULES = {
   bribeReduction: 25,
   laylowSeconds: 25,
   laylowReduction: 20,
+  maxStreetJobs: 3,
+  maxTeamsPerJob: 10,
+  maxEscortsPerTeam: 2,
+  heatReductionPerEscort: 2,
+  maxEscortHeatReduction: 0.5,
+  driverSpeedBonus: 0.2,
 } as const;
 
 export const BUILDINGS: BuildingDefinition[] = [
@@ -79,7 +85,7 @@ export const CREW: CrewDefinition[] = [
     name: "Runner",
     role: "COLLECTION",
     description:
-      "Fast feet. Discreet hands. The street-level backbone of your operation.",
+      "One runner per collection team. Each team collects $300; pair runners with smugglers for $650 shipping runs.",
     icon: "runner",
     cost: 100,
     seconds: 15,
@@ -88,7 +94,8 @@ export const CREW: CrewDefinition[] = [
     id: "enforcer",
     name: "Enforcer",
     role: "MUSCLE",
-    description: "For conversations that need a little more persuasion.",
+    description:
+      "Two per rival-hit team. Extra enforcers can cover any job: −2 Heat each, up to half the deployment's Heat.",
     icon: "shield",
     cost: 200,
     seconds: 25,
@@ -97,7 +104,8 @@ export const CREW: CrewDefinition[] = [
     id: "driver",
     name: "Driver",
     role: "TRANSPORT",
-    description: "Knows every back alley. Makes jobs 20% faster.",
+    description:
+      "One per team for the full 20% travel bonus. Extra drivers cover bigger squads and simultaneous jobs.",
     icon: "car",
     cost: 150,
     seconds: 20,
@@ -106,7 +114,8 @@ export const CREW: CrewDefinition[] = [
     id: "smuggler",
     name: "Smuggler",
     role: "CONTRABAND",
-    description: "Gets the goods past customs and opens the harbor route.",
+    description:
+      "One smuggler and one runner per shipping team. Each additional team brings another $650 shipment.",
     icon: "box",
     cost: 250,
     seconds: 30,

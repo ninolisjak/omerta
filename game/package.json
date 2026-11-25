@@ -7,7 +7,7 @@
   "scripts": {
     "start": "ng serve --host 127.0.0.1",
     "build": "ng build",
-    "test": "node --experimental-strip-types --test tests/game-engine.test.ts tests/family-engine.test.ts tests/game-persistence.test.ts"
+    "test": "node --experimental-strip-types --test tests/game-engine.test.ts tests/family-engine.test.ts tests/game-persistence.test.ts tests/crew-planner.test.ts"
   },
   "dependencies": {
     "@angular/common": "^21.2.0",

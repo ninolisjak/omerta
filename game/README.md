@@ -39,6 +39,8 @@ Start the dev server before running the smoke script. To reuse an existing Chrom
 4. Establish **Eight Ball Social** to recruit more crew, then hire a smuggler to open the docks job.
 5. Watch the Heat. Lay low, launder, or build the office to arrange bribes.
 
+Recruiting is now a real throughput upgrade. In **Rackets & jobs**, choose how many teams to send and optional enforcer cover. One collection team earns $300; four earn $1,200 plus scaled Respect and Family XP. Drivers improve travel coverage, and up to three deployments can run together. See [crew planning](docs/10-crew-and-job-planning.md) for the rules and tradeoffs.
+
 Timers are intentionally short for learning. A round lasts 21 real days. Offline progress uses finish timestamps and stops at round end. At 70+ Heat a scheduled police check can seize cash and arrest one idle enforcer. Every third completed job earns a Favor.
 
 ## Learn

@@ -1,6 +1,12 @@
 import { BUILDINGS, CREW, JOBS, RULES } from "./game.config.ts";
 import { FAMILY_RULES } from "./family.config.ts";
 import {
+  availableCrew,
+  jobAssignmentError,
+  previewJob,
+} from "./crew-planner.ts";
+export { availableCrew } from "./crew-planner.ts";
+import {
   awardFamilyXp,
   executeFamilyCommand,
   familyCommandError,
@@ -67,11 +73,6 @@ export function buildingCost(s: GameState, id: BuildingId): number {
     BUILDINGS.find((b) => b.id === id)!.cost * 1.65 ** s.buildings[id],
   );
 }
-export function availableCrew(s: GameState, id: CrewId): number {
-  return (
-    s.crew[id] - s.operations.reduce((n, op) => n + (op.crew?.[id] ?? 0), 0)
-  );
-}
 function accrue(s: GameState, until: number): void {
   const minutes = Math.max(0, until - s.updatedAt) / 60_000;
   s.dirty = Math.min(storageCap(s), s.dirty + incomePerMinute(s) * minutes);
@@ -102,20 +103,29 @@ function complete(s: GameState, op: Operation): void {
     );
   } else if (op.kind === "job") {
     const job = JOBS.find((j) => j.id === op.target)!;
-    s.dirty = Math.min(storageCap(s), s.dirty + job.reward);
-    s.respect += job.respect;
-    s.heat = Math.min(100, s.heat + job.heat);
-    s.jobsCompleted++;
-    if (s.jobsCompleted % 3 === 0) s.favors++;
+    // Old saved operations have no outcome: settle them at their original one-team values.
+    const outcome = op.jobOutcome ?? {
+      teams: 1,
+      reward: job.reward,
+      respect: job.respect,
+      heat: job.heat,
+      familyXp: FAMILY_RULES.jobXp[job.id],
+    };
+    s.dirty = Math.min(storageCap(s), s.dirty + outcome.reward);
+    s.respect += outcome.respect;
+    s.heat = Math.min(100, s.heat + outcome.heat);
+    const oldFavors = Math.floor(s.jobsCompleted / 3);
+    s.jobsCompleted += outcome.teams;
+    s.favors += Math.floor(s.jobsCompleted / 3) - oldFavors;
     entry(
       s,
       at,
       "Business taken care of.",
-      `${job.name}: $${job.reward} dirty money, +${job.respect} Respect, +${job.heat} Heat. Every third job earns a Favor.`,
+      `${job.name} · ${outcome.teams} ${outcome.teams === 1 ? "team" : "teams"}: $${outcome.reward} dirty money, +${outcome.respect} Respect, +${outcome.heat} Heat.${s.family && op.familyId === s.family.id ? " +" + outcome.familyXp + " Family XP." : ""} Each team completes one job; every third job earns a Favor.`,
     );
     if (s.family && op.familyId === s.family.id) {
-      s.family.jobsCompleted++;
-      awardFamilyXp(s, FAMILY_RULES.jobXp[job.id], at);
+      s.family.jobsCompleted += outcome.teams;
+      awardFamilyXp(s, outcome.familyXp, at);
     }
   } else if (op.kind === "launder") {
     const clean = Math.floor(Number(op.target) * launderingYield(s));
@@ -204,12 +214,8 @@ export function commandError(
     if (s.clean < CREW.find((c) => c.id === command.target)!.cost)
       return "You need more clean money to recruit.";
   } else if (command.type === "job") {
-    if (s.operations.some((op) => op.kind === "job" || op.kind === "laylow"))
-      return "Let your current street operation finish first.";
     const job = JOBS.find((j) => j.id === command.target)!;
-    for (const [id, count] of Object.entries(job.crew))
-      if (availableCrew(s, id as CrewId) < count!)
-        return `You need ${count} available ${id}${count! > 1 ? "s" : ""} for this job.`;
+    return jobAssignmentError(s, job, command);
   } else if (command.type === "launder") {
     if (!s.buildings.laundry)
       return "Build Bellini & Sons to start laundering.";
@@ -245,7 +251,7 @@ export function executeCommand(
     executeFamilyCommand(s, command, now);
     return { state: s, error: null };
   }
-  let op: Pick<Operation, "kind" | "target" | "label" | "crew">;
+  let op: Pick<Operation, "kind" | "target" | "label" | "crew" | "jobOutcome">;
   let seconds: number;
   if (command.type === "build") {
     const building = BUILDINGS.find((b) => b.id === command.target)!;
@@ -270,11 +276,21 @@ export function executeCommand(
     };
   } else if (command.type === "job") {
     const job = JOBS.find((j) => j.id === command.target)!;
-    const crew = { ...job.crew };
-    const driver = availableCrew(s, "driver") > 0;
-    if (driver) crew.driver = 1;
-    seconds = job.seconds * (driver ? 0.8 : 1);
-    op = { kind: "job", target: job.id, label: job.name, crew };
+    const plan = previewJob(s, job, command);
+    seconds = plan.seconds;
+    op = {
+      kind: "job",
+      target: job.id,
+      label: `${job.name} · ${plan.teams} ${plan.teams === 1 ? "team" : "teams"}`,
+      crew: plan.crew,
+      jobOutcome: {
+        teams: plan.teams,
+        reward: plan.reward,
+        respect: plan.respect,
+        heat: plan.heat,
+        familyXp: plan.familyXp,
+      },
+    };
   } else if (command.type === "launder") {
     const batch = laundryBatch(s);
     s.dirty -= batch;
@@ -299,9 +315,13 @@ export function executeCommand(
     );
     return { state: s, error: null };
   }
+  let id = `${now}-${command.type}`;
+  let serial = 0;
+  while (s.operations.some((active) => active.id === id))
+    id = `${now}-${command.type}-${++serial}`;
   s.operations.push({
     ...op,
-    id: `${now}-${command.type}`,
+    id,
     startedAt: now,
     endsAt: now + seconds * 1000,
     ...(s.family ? { familyId: s.family.id } : {}),
