@@ -25,7 +25,9 @@
             <small>{{ game.frontCount() }}</small>
           }
           @if (item.id === "family") {
-            <span class="nav-soon">SOON</span>
+            <span class="nav-soon">{{
+              familyProgress() ? "LV." + familyProgress()!.level : "NEW"
+            }}</span>
           }
         </button>
       }
@@ -50,7 +52,14 @@
       </button>
       <div class="player-card">
         <div class="player-monogram">L<span>◆</span></div>
-        <div><strong>Lisjak</strong><span>INDEPENDENT</span></div>
+        <div>
+          <strong>Lisjak</strong
+          ><span>{{
+            game.state().family
+              ? "DON · " + game.state().family!.name
+              : "INDEPENDENT"
+          }}</span>
+        </div>
         <button
           class="icon-button"
           aria-label="Open settings"
@@ -186,20 +195,75 @@
           <p>{{ heading().subtitle }}</p>
         </div>
         <div class="independent-badge">
-          <span class="status-dot"></span> INDEPENDENT <o-icon name="shield" />
+          <span class="status-dot"></span>
+          {{ game.state().family ? "FAMILY DON" : "INDEPENDENT" }}
+          <o-icon name="shield" />
         </div>
       </div>
+      @if (familyProgress(); as familyXp) {
+        <button class="family-progress-strip" (click)="go('family')">
+          <span class="level-chip">LV. {{ familyXp.level }}</span>
+          <div>
+            <strong>{{ game.state().family!.name }}</strong
+            ><span
+              >{{ familyXp.rank }} ·
+              {{
+                familyXp.max
+                  ? "Maximum level"
+                  : familyXp.current + " / " + familyXp.required + " XP"
+              }}</span
+            >
+          </div>
+          <div class="xp-track"><i [style.width.%]="familyXp.percent"></i></div>
+          <span class="family-strip-treasury"
+            >${{ game.state().family!.treasury | number: "1.0-0" }}
+            <small>TREASURY</small></span
+          ><o-icon name="arrow" />
+        </button>
+      }
       @switch (view()) {
         @case ("overview") {
           <div class="overview-grid">
             <div class="overview-main">
+              <section class="first-steps panel">
+                <div class="section-heading">
+                  <h2><o-icon name="bolt" /> Your first night</h2>
+                  <span class="mission-tag"
+                    >{{ onboardingComplete() }} / 3 COMPLETE</span
+                  >
+                </div>
+                <div class="first-step-items">
+                  @for (
+                    step of firstSteps();
+                    track step.label;
+                    let i = $index
+                  ) {
+                    <button
+                      [class.complete]="step.complete"
+                      (click)="go(step.view)"
+                    >
+                      <span>{{ step.complete ? "✓" : "0" + (i + 1) }}</span
+                      ><strong>{{ step.label }}</strong
+                      ><o-icon [name]="step.complete ? 'check' : 'arrow'" />
+                    </button>
+                  }
+                </div>
+                @if (onboardingComplete() === 3 && !game.state().family) {
+                  <button class="text-button" (click)="go('family')">
+                    Your next chapter: found a Family<o-icon name="arrow" />
+                  </button>
+                }
+              </section>
               <div class="section-heading">
                 <h2><o-icon name="map" /> The neighborhood</h2>
                 <button class="text-button" (click)="go('city')">
                   Explore city <o-icon name="arrow" />
                 </button>
               </div>
-              <o-city (navigate)="go($event)" />
+              <o-city
+                [activeOperations]="game.state().operations.length"
+                (navigate)="go($event)"
+              />
               <section class="operations-panel panel">
                 <div class="section-heading">
                   <h2>
@@ -339,7 +403,11 @@
             <h2><o-icon name="map" /> Blackwater, district by district</h2>
             <span class="small-label">SELECT A MARKER TO INVESTIGATE</span>
           </div>
-          <o-city [expanded]="true" (navigate)="go($event)" />
+          <o-city
+            [expanded]="true"
+            [activeOperations]="game.state().operations.length"
+            (navigate)="go($event)"
+          />
           <div class="city-footnote">
             <o-icon name="pin" />
             <p>
@@ -350,413 +418,19 @@
           </div>
         }
         @case ("fronts") {
-          <div class="section-heading">
-            <h2>
-              <o-icon name="building" /> Fronts & operations
-              <span class="count-badge">{{ game.frontCount() }} / 5</span>
-            </h2>
-            <span class="small-label">ONE CONSTRUCTION AT A TIME</span>
-          </div>
-          <div class="fronts-grid">
-            @for (building of buildings; track building.id) {
-              <article
-                class="front-card panel"
-                [class.unbuilt]="!game.state().buildings[building.id]"
-              >
-                <div class="front-art" [class]="'front-art art-' + building.id">
-                  <span class="front-art-icon"
-                    ><o-icon [name]="building.icon" /></span
-                  ><span class="front-level">{{
-                    game.state().buildings[building.id]
-                      ? "LEVEL " + game.state().buildings[building.id]
-                      : "NOT ESTABLISHED"
-                  }}</span>
-                </div>
-                <div class="front-content">
-                  <span class="eyebrow">{{ building.type }}</span>
-                  <h2>{{ building.name }}</h2>
-                  <p>{{ building.description }}</p>
-                  <div class="front-effect">
-                    <o-icon name="plus" />{{ building.effect }}
-                  </div>
-                  <div class="front-cost">
-                    <span
-                      ><o-icon name="wallet" /> ${{
-                        cost(building.id) | number: "1.0-0"
-                      }}</span
-                    ><span
-                      ><o-icon name="clock" />
-                      {{
-                        building.seconds *
-                          (game.state().buildings[building.id] + 1)
-                      }}s</span
-                    >
-                  </div>
-                  <button
-                    class="button full"
-                    [class.brass]="!game.state().buildings[building.id]"
-                    [class.dark]="!!game.state().buildings[building.id]"
-                    [disabled]="
-                      !!reason({ type: 'build', target: building.id })
-                    "
-                    [title]="
-                      reason({ type: 'build', target: building.id }) ??
-                      'Start construction'
-                    "
-                    (click)="
-                      game.dispatch({ type: 'build', target: building.id })
-                    "
-                  >
-                    {{
-                      pending("build", building.id)
-                        ? "Construction underway…"
-                        : game.state().buildings[building.id] >= rules.maxLevel
-                          ? "Maximum level"
-                          : game.state().buildings[building.id]
-                            ? "Upgrade front"
-                            : "Establish front"
-                    }}<o-icon name="arrow" />
-                  </button>
-                  @if (reason({ type: "build", target: building.id })) {
-                    <span class="action-hint">{{
-                      reason({ type: "build", target: building.id })
-                    }}</span>
-                  }
-                </div>
-              </article>
-            }
-          </div>
-          <section class="panel laundering-panel">
-            <div>
-              <span class="eyebrow">CLEAN BOOKS. QUIET NIGHTS.</span>
-              <h2>The laundering desk</h2>
-              <p>
-                Convert ${{ batch() }} dirty money into ${{
-                  batch() * rules.launderingYield | number: "1.0-0"
-                }}
-                clean money in 20 seconds. Each batch also removes 4 Heat.
-              </p>
-            </div>
-            <button
-              class="button brass"
-              [disabled]="!!reason({ type: 'launder' })"
-              [title]="
-                reason({ type: 'launder' }) ?? 'Start a laundering batch'
-              "
-              (click)="game.dispatch({ type: 'launder' })"
-            >
-              <o-icon name="laundry" />{{
-                pending("launder")
-                  ? "Cleaning the books…"
-                  : "Launder $" + batch()
-              }}<o-icon name="arrow" />
-            </button>
-            @if (reason({ type: "launder" })) {
-              <span class="action-hint">{{ reason({ type: "launder" }) }}</span>
-            }
-          </section>
-          <section class="panel operations-panel">
-            <div class="section-heading"><h2>Active operations</h2></div>
-            <o-operations
-              [operations]="game.state().operations"
-              [now]="game.now()"
-            />
-          </section>
+          <o-fronts />
         }
         @case ("crew") {
-          <div class="crew-banner panel">
-            <div class="large-symbol"><o-icon name="crew" /></div>
-            <div>
-              <span class="eyebrow">THE LISJAK CREW</span>
-              <h2>{{ game.crewCount() }} men. One word: loyalty.</h2>
-              <p>
-                Crew assigned to a job return when it finishes. An available
-                driver joins automatically and shortens travel by 20%.
-              </p>
-            </div>
-          </div>
-          @if (!game.state().buildings.poolhall) {
-            <div class="notice">
-              <o-icon name="lock" />
-              <p>
-                Recruitment needs a home. Build
-                <strong>Eight Ball Social</strong> to start training your crew.
-              </p>
-              <button class="text-button" (click)="go('fronts')">
-                View fronts<o-icon name="arrow" />
-              </button>
-            </div>
-          }
-          <div class="crew-grid">
-            @for (unit of crew; track unit.id) {
-              <article class="crew-card panel">
-                <div class="crew-card-top">
-                  <div class="unit-icon"><o-icon [name]="unit.icon" /></div>
-                  <div class="unit-count">
-                    {{ available(unit.id)
-                    }}<span>/ {{ game.state().crew[unit.id] }} AVAILABLE</span>
-                  </div>
-                </div>
-                <span class="eyebrow">{{ unit.role }}</span>
-                <h2>{{ unit.name }}</h2>
-                <p>{{ unit.description }}</p>
-                <div class="front-cost">
-                  <span><o-icon name="wallet" /> ${{ unit.cost }}</span
-                  ><span><o-icon name="clock" /> {{ unit.seconds }}s base</span>
-                </div>
-                <button
-                  class="button dark full"
-                  [disabled]="!!reason({ type: 'recruit', target: unit.id })"
-                  [title]="
-                    reason({ type: 'recruit', target: unit.id }) ??
-                    'Train one ' + unit.name
-                  "
-                  (click)="game.dispatch({ type: 'recruit', target: unit.id })"
-                >
-                  {{
-                    pending("recruit", unit.id)
-                      ? "Training…"
-                      : "Recruit " + unit.name.toLowerCase()
-                  }}<o-icon name="plus" />
-                </button>
-                @if (reason({ type: "recruit", target: unit.id })) {
-                  <span class="action-hint">{{
-                    reason({ type: "recruit", target: unit.id })
-                  }}</span>
-                }
-              </article>
-            }
-          </div>
-          <section class="panel operations-panel">
-            <div class="section-heading"><h2>Active operations</h2></div>
-            <o-operations
-              [operations]="game.state().operations"
-              [now]="game.now()"
-            />
-          </section>
+          <o-crew (navigate)="go($event)" />
         }
         @case ("rackets") {
-          <div class="jobs-grid">
-            @for (job of jobs; track job.id) {
-              <article class="job-card panel">
-                <div class="job-card-top">
-                  <div class="unit-icon"><o-icon [name]="job.icon" /></div>
-                  <span class="job-risk" [class.risky]="job.heat >= 20">{{
-                    job.heat >= 20
-                      ? "HIGH PROFILE"
-                      : job.heat >= 15
-                        ? "SOME ATTENTION"
-                        : "LOW PROFILE"
-                  }}</span>
-                </div>
-                <span class="eyebrow">{{ job.district }}</span>
-                <h2>{{ job.name }}</h2>
-                <p>{{ job.description }}</p>
-                <div class="job-rewards">
-                  <span
-                    ><o-icon name="coins" /><strong>+${{ job.reward }}</strong
-                    ><small>DIRTY MONEY</small></span
-                  ><span
-                    ><o-icon name="crown" /><strong>+{{ job.respect }}</strong
-                    ><small>RESPECT</small></span
-                  ><span class="heat-reward"
-                    ><o-icon name="flame" /><strong>+{{ job.heat }}</strong
-                    ><small>HEAT</small></span
-                  >
-                </div>
-                <div class="job-requirements">
-                  <span><o-icon name="crew" />{{ jobCrew(job) }}</span
-                  ><span><o-icon name="clock" />{{ jobSeconds(job) }}s</span>
-                </div>
-                <button
-                  class="button brass full"
-                  [disabled]="!!reason({ type: 'job', target: job.id })"
-                  [title]="
-                    reason({ type: 'job', target: job.id }) ?? 'Send your crew'
-                  "
-                  (click)="game.dispatch({ type: 'job', target: job.id })"
-                >
-                  {{
-                    pending("job", job.id)
-                      ? "Crew on the street…"
-                      : "Send the crew"
-                  }}<o-icon name="arrow" />
-                </button>
-                @if (reason({ type: "job", target: job.id })) {
-                  <span class="action-hint">{{
-                    reason({ type: "job", target: job.id })
-                  }}</span>
-                }
-              </article>
-            }
-          </div>
-          <div class="management-grid">
-            <section class="panel heat-management">
-              <span class="eyebrow">KNOW WHEN TO DISAPPEAR</span>
-              <h2>Manage the Heat</h2>
-              <p>
-                Current Heat:
-                <strong>{{ game.state().heat | number: "1.0-0" }} / 100</strong
-                >. It falls by
-                {{
-                  rules.heatDecayPerMinute + game.state().buildings.office * 0.5
-                }}
-                per minute. Police check at 70 or higher.
-              </p>
-              <div class="heat-track">
-                <i [style.width.%]="game.state().heat"></i>
-              </div>
-              <div class="button-row">
-                <button
-                  class="button dark"
-                  [disabled]="!!reason({ type: 'laylow' })"
-                  (click)="game.dispatch({ type: 'laylow' })"
-                >
-                  <o-icon name="eye" />Lay low · −20 Heat</button
-                ><button
-                  class="button dark"
-                  [disabled]="!!reason({ type: 'bribe' })"
-                  [title]="reason({ type: 'bribe' }) ?? '$200 clean + 1 Favor'"
-                  (click)="game.dispatch({ type: 'bribe' })"
-                >
-                  <o-icon name="briefcase" />Bribe · −25 Heat
-                </button>
-              </div>
-              <p class="action-hint">
-                {{
-                  reason({ type: "bribe" }) ??
-                    "A bribe costs $200 clean money and 1 Favor. Laying low takes 25 seconds and occupies the street operation slot."
-                }}
-              </p>
-            </section>
-            <section class="panel laundry-management">
-              <span class="eyebrow">MAKE IT LOOK LEGITIMATE</span>
-              <h2>Clean up your earnings</h2>
-              <p>
-                Your storage holds ${{ game.capacity() | number }} dirty money.
-                Earnings above that are lost. Keep your cash moving.
-              </p>
-              <div class="laundry-exchange">
-                <span>${{ batch() }}<small>DIRTY</small></span
-                ><o-icon name="arrow" /><span
-                  >${{ batch() * rules.launderingYield | number: "1.0-0"
-                  }}<small>CLEAN</small></span
-                >
-              </div>
-              <button
-                class="button brass full"
-                [disabled]="!!reason({ type: 'launder' })"
-                [title]="reason({ type: 'launder' }) ?? 'Start laundering'"
-                (click)="game.dispatch({ type: 'launder' })"
-              >
-                <o-icon name="laundry" />{{
-                  pending("launder")
-                    ? "Laundering in progress…"
-                    : "Clean the books"
-                }}
-              </button>
-              @if (reason({ type: "launder" })) {
-                <span class="action-hint">{{
-                  reason({ type: "launder" })
-                }}</span>
-              }
-            </section>
-          </div>
-          <section class="panel operations-panel">
-            <div class="section-heading">
-              <h2>Active operations</h2>
-              <span class="small-label">EVERY THIRD JOB EARNS A FAVOR</span>
-            </div>
-            <o-operations
-              [operations]="game.state().operations"
-              [now]="game.now()"
-            />
-          </section>
+          <o-rackets />
         }
         @case ("family") {
-          <section class="independent-panel panel">
-            <div class="independent-crest"><o-icon name="shield" /></div>
-            <span class="eyebrow">YOUR CURRENT PATH</span>
-            <h2>The Independent</h2>
-            <p>
-              No tribute. No obligations. No one to answer to.<br />Build your
-              name on the streets of Blackwater, one job at a time.
-            </p>
-            <div class="independent-perks">
-              <span><o-icon name="coins" />Keep every dollar</span
-              ><span><o-icon name="eye" />Stay under the radar</span
-              ><span><o-icon name="target" />Solo contracts & rackets</span>
-            </div>
-            <span class="independent-active"
-              ><span class="status-dot"></span> THIS IS YOUR CITY, TOO.</span
-            >
-          </section>
-          <div class="section-heading faction-heading">
-            <h2>Two sides of the same city.</h2>
-            <span class="coming-label">MULTIPLAYER CHAPTER • PLANNED</span>
-          </div>
-          <div class="factions-grid">
-            @for (faction of factions; track faction.name) {
-              <article class="faction-card panel">
-                <div class="faction-emblem">
-                  <o-icon [name]="faction.icon" />
-                </div>
-                <h3>{{ faction.name }}</h3>
-                <p>{{ faction.motto }}</p>
-                <span>{{ faction.bonus }}</span>
-              </article>
-            }
-          </div>
-          <div class="notice">
-            <o-icon name="lock" />
-            <p>
-              Families, shared defense, faction wars, and online rankings need a
-              server. This build is a solo prototype. Your local progress is
-              real; the multiplayer chapter comes next.
-            </p>
-          </div>
+          <o-family (navigate)="go($event)" />
         }
         @case ("reports") {
-          <div class="report-summary">
-            <div class="panel">
-              <o-icon name="target" /><strong>{{
-                game.state().jobsCompleted
-              }}</strong
-              ><span>JOBS COMPLETED</span>
-            </div>
-            <div class="panel">
-              <o-icon name="laundry" /><strong
-                >${{ game.state().totalLaundered | number: "1.0-0" }}</strong
-              ><span>TOTAL LAUNDERED</span>
-            </div>
-            <div class="panel">
-              <o-icon name="crown" /><strong>{{ game.state().respect }}</strong
-              ><span>RESPECT EARNED & HELD</span>
-            </div>
-          </div>
-          <section class="panel reports-panel">
-            <div class="section-heading">
-              <h2>Your street ledger</h2>
-              <span class="small-label">LATEST 30 REPORTS</span>
-            </div>
-            @for (entry of game.state().journal; track entry.id) {
-              <article class="report-row">
-                <div
-                  class="activity-mark"
-                  [class.danger]="entry.tone === 'warning'"
-                >
-                  <o-icon
-                    [name]="entry.tone === 'warning' ? 'flame' : 'check'"
-                  />
-                </div>
-                <div>
-                  <h3>{{ entry.title }}</h3>
-                  <p>{{ entry.text }}</p>
-                </div>
-                <time>{{ entry.at | date: "MMM d, HH:mm" }}</time>
-              </article>
-            }
-          </section>
+          <o-reports />
         }
       }
       <footer class="game-footer">
@@ -771,11 +445,32 @@
           >BLACKWATER DOESN’T SLEEP.
           <span class="footer-flourish">NEITHER DOES AMBITION.</span></span
         ><button (click)="openModal('guide')">
-          SOLO PROTOTYPE <span>v0.1</span> <o-icon name="arrow" />
+          SOLO PROTOTYPE <span>v0.2</span> <o-icon name="arrow" />
         </button>
       </footer>
     </main>
   </div>
+  @if (game.celebration(); as reward) {
+    <div class="reward-popup" role="status" [class.level-up]="reward.levelUp">
+      <span class="reward-popup-icon"
+        ><o-icon [name]="reward.levelUp ? 'crown' : 'check'"
+      /></span>
+      <div>
+        <span class="eyebrow">{{
+          reward.levelUp ? "FAMILY LEVEL UP" : "OPERATION COMPLETE"
+        }}</span
+        ><strong>{{ reward.title }}</strong>
+        <p>{{ reward.detail }}</p>
+      </div>
+      <button
+        class="icon-button"
+        aria-label="Dismiss reward"
+        (click)="game.celebration.set(null)"
+      >
+        <o-icon name="close" />
+      </button>
+    </div>
+  }
   @if (game.toast(); as toast) {
     <div class="toast" [class.error]="toast.error" role="status">
       <o-icon [name]="toast.error ? 'eye' : 'check'" /><span>{{

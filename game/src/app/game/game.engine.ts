@@ -1,4 +1,22 @@
 import { BUILDINGS, CREW, JOBS, RULES } from "./game.config.ts";
+import { FAMILY_RULES } from "./family.config.ts";
+import {
+  awardFamilyXp,
+  executeFamilyCommand,
+  familyCommandError,
+  isFamilyCommand,
+} from "./family.engine.ts";
+import { recordEntry as entry } from "./game.events.ts";
+import {
+  storageCap,
+  incomePerMinute,
+  launderingYield,
+} from "./game.economy.ts";
+export {
+  storageCap,
+  incomePerMinute,
+  launderingYield,
+} from "./game.economy.ts";
 import type {
   BuildingId,
   CrewId,
@@ -9,7 +27,10 @@ import type {
 
 export function createGame(now: number): GameState {
   return {
-    version: 1,
+    version: 2,
+    family: null,
+    familySerial: 0,
+    claimedFamilyContracts: [],
     startedAt: now,
     updatedAt: now,
     roundEndsAt: now + RULES.roundDays * 86_400_000,
@@ -41,12 +62,6 @@ export function createGame(now: number): GameState {
     ],
   };
 }
-export function storageCap(s: GameState): number {
-  return 5000 + s.buildings.safehouse * 2000;
-}
-export function incomePerMinute(s: GameState): number {
-  return s.buildings.speakeasy * RULES.dirtyPerMinutePerLevel;
-}
 export function buildingCost(s: GameState, id: BuildingId): number {
   return Math.round(
     BUILDINGS.find((b) => b.id === id)!.cost * 1.65 ** s.buildings[id],
@@ -56,22 +71,6 @@ export function availableCrew(s: GameState, id: CrewId): number {
   return (
     s.crew[id] - s.operations.reduce((n, op) => n + (op.crew?.[id] ?? 0), 0)
   );
-}
-function entry(
-  s: GameState,
-  at: number,
-  title: string,
-  text: string,
-  tone: "good" | "warning" | "neutral" = "good",
-): void {
-  s.journal.unshift({
-    id: `${at}-${s.journal.length}-${title}`,
-    at,
-    title,
-    text,
-    tone,
-  });
-  s.journal = s.journal.slice(0, 30);
 }
 function accrue(s: GameState, until: number): void {
   const minutes = Math.max(0, until - s.updatedAt) / 60_000;
@@ -114,10 +113,15 @@ function complete(s: GameState, op: Operation): void {
       "Business taken care of.",
       `${job.name}: $${job.reward} dirty money, +${job.respect} Respect, +${job.heat} Heat. Every third job earns a Favor.`,
     );
+    if (s.family && op.familyId === s.family.id) {
+      s.family.jobsCompleted++;
+      awardFamilyXp(s, FAMILY_RULES.jobXp[job.id], at);
+    }
   } else if (op.kind === "launder") {
-    const clean = Math.floor(Number(op.target) * RULES.launderingYield);
+    const clean = Math.floor(Number(op.target) * launderingYield(s));
     s.clean += clean;
     s.totalLaundered += clean;
+    if (s.family && op.familyId === s.family.id) s.family.laundered += clean;
     s.heat = Math.max(0, s.heat - 4);
     entry(
       s,
@@ -184,6 +188,7 @@ export function commandError(
 ): string | null {
   if (s.updatedAt >= s.roundEndsAt)
     return "This round has ended. Start a new round from Settings.";
+  if (isFamilyCommand(command)) return familyCommandError(s, command);
   if (command.type === "build") {
     if (s.operations.some((op) => op.kind === "build"))
       return "Your builder is busy. Let the current construction finish.";
@@ -236,6 +241,10 @@ export function executeCommand(
   const s = advanceGame(previous, now);
   const error = commandError(s, command);
   if (error) return { state: s, error };
+  if (isFamilyCommand(command)) {
+    executeFamilyCommand(s, command, now);
+    return { state: s, error: null };
+  }
   let op: Pick<Operation, "kind" | "target" | "label" | "crew">;
   let seconds: number;
   if (command.type === "build") {
@@ -295,6 +304,7 @@ export function executeCommand(
     id: `${now}-${command.type}`,
     startedAt: now,
     endsAt: now + seconds * 1000,
+    ...(s.family ? { familyId: s.family.id } : {}),
   });
   return { state: s, error: null };
 }

@@ -2,7 +2,7 @@
 
 _Keep your mouth shut. Keep your city._
 
-Status: prototype v0.1. Adapted from **Noir Mafia Browser Game Prototype Design Doc.pdf**. The original PDF remains unchanged. This Markdown document is the editable design source going forward. The game title is decided: **Omertà**.
+Status: prototype v0.2. Adapted from **Noir Mafia Browser Game Prototype Design Doc.pdf**. The original PDF remains unchanged. This Markdown document is the editable design source going forward. The game title is decided: **Omertà**.
 
 ## Description
 
@@ -94,7 +94,11 @@ The first playable jobs are a protection collection, a dockside shipment, and an
 
 ## 11. Families
 
-Planned: Don/capo/soldier hierarchy, shared defense, territory control, joint heists, shared goals, and chat. Members pay tribute and gain protection, with the risk of being dragged into a war. Only Families hold high-value districts. The current UI explains these plans without offering fake membership.
+Implemented in v0.2: create a local Family as its single founder and Don, choose an emblem, earn Family XP and levels, claim contracts, fund a treasury, and buy headquarters upgrades. Planned multiplayer systems include Don/capo/soldier permissions across accounts, invitations, shared defense, territory control, joint heists, tribute, and chat. Only Families will hold high-value districts.
+
+Phase 2 now implements a browser-local founding flow, a single founder as Don, Family XP and levels earned through eligible completed jobs, founder-solvable contracts, a clean-money treasury, and level-gated headquarters upgrades. Creating a Family must preserve personal progress, and the progression loop must work with one member. Contributions transfer money into the treasury; moving money around must not generate repeatable XP. Existing browser saves need a compatible migration.
+
+Real invitations, shared membership, and role permissions arrive with server-backed accounts and commands. Shared defense, joint combat, and tribute rules follow the combat foundation. Local rounds reset Family identity, XP, treasury, upgrades, and claimed contracts. Disbanding forfeits active Family progress but preserves claimed contracts for the round. The production round-reset policy remains a decision for shared seasonal play.
 
 ## 12. Rival factions
 
@@ -133,15 +137,18 @@ See [the server roadmap](05-the-road-to-multiplayer.md).
 | Persistence                                             | Browser-local implemented; server saves planned                      |
 | Accounts and login                                      | Planned                                                              |
 | World map, PvP, battle reports                          | Planned                                                              |
-| Families, shared defense, factions, rankings            | Planned                                                              |
+| Solo Family founding, XP, contracts, treasury, upgrades | Implemented in v0.2                                                  |
+| Shared Family membership, defense, factions, rankings   | Planned                                                              |
 
 ## 17. Build order
 
+The [development phases](development-phases.md) provide the detailed implementation sequence, status, and completion criteria. The broad progression below describes the overall game direction.
+
 1. Solo foundation and learning documents: current milestone.
-2. Accounts, authoritative server, database, concurrency checks.
-3. World map, travel, shipments, battles, and persisted reports.
-4. Shared round calendar, leaderboards, activity feed.
-5. Families, defense, joint operations.
+2. Angular component cleanup, then local Family founding, XP, contracts, treasury, and upgrades for early grind testing.
+3. Accounts, authoritative personal/Family commands, database, membership, and concurrency checks.
+4. World map, travel, shipments, battles, shared rounds, and leaderboards.
+5. PvP, Family shared defense, tribute, and joint combat operations.
 6. Factions and territory victory.
 7. Cosmetics and optional later expansions.
 

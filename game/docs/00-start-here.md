@@ -10,6 +10,8 @@ The HUD uses a black-and-white handheld-RPG style: a dark menu, a clear resource
 
 ## Your learning route
 
+For what to build next and how we will track progress, use the [development phases](development-phases.md). Lesson numbers explain concepts; phase numbers track delivery milestones.
+
 | Chapter                                                     | What you will learn                                | Main file                     |
 | ----------------------------------------------------------- | -------------------------------------------------- | ----------------------------- |
 | [1. Follow one click](01-your-first-angular-feature.md)     | TypeScript types, a command, and a rule            | `game.engine.ts`              |
@@ -19,6 +21,8 @@ The HUD uses a black-and-white handheld-RPG style: a dark menu, a clear resource
 | [5. The road to multiplayer](05-the-road-to-multiplayer.md) | Server authority and a staged backlog              | Future backend                |
 
 Continue with [6. A readable pixel-art interface](06-readable-pixel-ui.md) for the redesign's typography, grayscale palette, pixel rendering, and responsive layout.
+
+The latest completed work is explained in [7. Feature components](07-feature-components.md), [8. Family progression](08-family-progression.md), and [9. Dark mode and game feedback](09-dark-mode-and-game-feedback.md). You can now found and grow a Family on your own. Its XP, treasury, contracts, and upgrades save alongside your personal game.
 
 Read [the design document](game-design.md) for the complete game vision and the difference between the PDF’s planned MVP and this first playable build.
 

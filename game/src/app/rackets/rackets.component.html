@@ -1,0 +1,127 @@
+<div class="jobs-grid">
+  @for (job of jobs; track job.id) {
+    <article class="job-card panel">
+      <div class="job-card-top">
+        <div class="unit-icon"><o-icon [name]="job.icon" /></div>
+        <span class="job-risk" [class.risky]="job.heat >= 20">{{
+          job.heat >= 20
+            ? "HIGH PROFILE"
+            : job.heat >= 15
+              ? "SOME ATTENTION"
+              : "LOW PROFILE"
+        }}</span>
+      </div>
+      <span class="eyebrow">{{ job.district }}</span>
+      <h2>{{ job.name }}</h2>
+      <p>{{ job.description }}</p>
+      <div class="job-rewards">
+        <span
+          ><o-icon name="coins" /><strong>+${{ job.reward }}</strong
+          ><small>DIRTY MONEY</small></span
+        ><span
+          ><o-icon name="crown" /><strong>+{{ job.respect }}</strong
+          ><small>RESPECT</small></span
+        ><span class="heat-reward"
+          ><o-icon name="flame" /><strong>+{{ job.heat }}</strong
+          ><small>HEAT</small></span
+        >
+      </div>
+      @if (game.state().family) {
+        <div class="job-family-reward">
+          <o-icon name="shield" />+{{ familyRules.jobXp[job.id] }} FAMILY XP
+          WHEN SENT FOR YOUR FAMILY
+        </div>
+      }
+      <div class="job-requirements">
+        <span><o-icon name="crew" />{{ jobCrew(job) }}</span
+        ><span><o-icon name="clock" />{{ jobSeconds(job) }}s</span>
+      </div>
+      <button
+        class="button brass full"
+        [disabled]="!!reason({ type: 'job', target: job.id })"
+        [title]="reason({ type: 'job', target: job.id }) ?? 'Send your crew'"
+        (click)="game.dispatch({ type: 'job', target: job.id })"
+      >
+        {{ pending("job", job.id) ? "Crew on the street…" : "Send the crew"
+        }}<o-icon name="arrow" />
+      </button>
+      @if (reason({ type: "job", target: job.id })) {
+        <span class="action-hint">{{
+          reason({ type: "job", target: job.id })
+        }}</span>
+      }
+    </article>
+  }
+</div>
+<div class="management-grid">
+  <section class="panel heat-management">
+    <span class="eyebrow">KNOW WHEN TO DISAPPEAR</span>
+    <h2>Manage the Heat</h2>
+    <p>
+      Current Heat:
+      <strong>{{ game.state().heat | number: "1.0-0" }} / 100</strong>. It falls
+      by
+      {{ rules.heatDecayPerMinute + game.state().buildings.office * 0.5 }}
+      per minute. Police check at 70 or higher.
+    </p>
+    <div class="heat-track">
+      <i [style.width.%]="game.state().heat"></i>
+    </div>
+    <div class="button-row">
+      <button
+        class="button dark"
+        [disabled]="!!reason({ type: 'laylow' })"
+        (click)="game.dispatch({ type: 'laylow' })"
+      >
+        <o-icon name="eye" />Lay low · −20 Heat</button
+      ><button
+        class="button dark"
+        [disabled]="!!reason({ type: 'bribe' })"
+        [title]="reason({ type: 'bribe' }) ?? '$200 clean + 1 Favor'"
+        (click)="game.dispatch({ type: 'bribe' })"
+      >
+        <o-icon name="briefcase" />Bribe · −25 Heat
+      </button>
+    </div>
+    <p class="action-hint">
+      {{
+        reason({ type: "bribe" }) ??
+          "A bribe costs $200 clean money and 1 Favor. Laying low takes 25 seconds and occupies the street operation slot."
+      }}
+    </p>
+  </section>
+  <section class="panel laundry-management">
+    <span class="eyebrow">MAKE IT LOOK LEGITIMATE</span>
+    <h2>Clean up your earnings</h2>
+    <p>
+      Your storage holds ${{ game.capacity() | number }} dirty money. Earnings
+      above that are lost. Keep your cash moving.
+    </p>
+    <div class="laundry-exchange">
+      <span>${{ batch() }}<small>DIRTY</small></span
+      ><o-icon name="arrow" /><span
+        >${{ batch() * yield() | number: "1.0-0" }}<small>CLEAN</small></span
+      >
+    </div>
+    <button
+      class="button brass full"
+      [disabled]="!!reason({ type: 'launder' })"
+      [title]="reason({ type: 'launder' }) ?? 'Start laundering'"
+      (click)="game.dispatch({ type: 'launder' })"
+    >
+      <o-icon name="laundry" />{{
+        pending("launder") ? "Laundering in progress…" : "Clean the books"
+      }}
+    </button>
+    @if (reason({ type: "launder" })) {
+      <span class="action-hint">{{ reason({ type: "launder" }) }}</span>
+    }
+  </section>
+</div>
+<section class="panel operations-panel">
+  <div class="section-heading">
+    <h2>Active operations</h2>
+    <span class="small-label">EVERY THIRD JOB EARNS A FAVOR</span>
+  </div>
+  <o-operations [operations]="game.state().operations" [now]="game.now()" />
+</section>

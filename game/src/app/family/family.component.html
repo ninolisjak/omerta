@@ -1,0 +1,386 @@
+@if (game.state().family; as family) {
+  <section class="family-hero panel">
+    <div class="family-hero-art" aria-hidden="true">
+      <div class="family-crest"><o-icon [name]="family.emblem" /></div>
+      <div class="pixel-stars">✦ &nbsp; ✦ &nbsp; ✦</div>
+    </div>
+    <div class="family-hero-content">
+      <span class="eyebrow">THE NAME YOU'RE BUILDING</span>
+      <h2>{{ family.name }}</h2>
+      <p>You’re the Don. Make every move count.</p>
+      <div class="family-rank">
+        <span class="level-chip">LV. {{ progress()!.level }}</span
+        ><strong>{{ progress()!.rank }}</strong
+        ><span>{{ family.xp }} TOTAL XP</span>
+      </div>
+      <div
+        class="xp-track"
+        role="progressbar"
+        aria-label="Family level progress"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        [attr.aria-valuenow]="progress()!.percent"
+      >
+        <i [style.width.%]="progress()!.percent"></i>
+      </div>
+      <div class="xp-caption">
+        <span>{{
+          progress()!.max
+            ? "Maximum Family level reached"
+            : progress()!.current +
+              " / " +
+              progress()!.required +
+              " XP to level " +
+              (progress()!.level + 1)
+        }}</span
+        ><span>JOBS EARN 25–50 XP</span>
+      </div>
+    </div>
+  </section>
+  <div class="family-stat-grid">
+    <div class="panel">
+      <o-icon name="crew" /><strong>01</strong
+      ><span>MEMBER · YOU, THE DON</span>
+    </div>
+    <div class="panel">
+      <o-icon name="target" /><strong>{{ family.jobsCompleted }}</strong
+      ><span>FAMILY JOBS COMPLETED</span>
+    </div>
+    <div class="panel">
+      <o-icon name="laundry" /><strong
+        >${{ family.laundered | number: "1.0-0" }}</strong
+      ><span>CLEANED FOR THE FAMILY</span>
+    </div>
+  </div>
+  <div class="section-heading">
+    <h2><o-icon name="target" /> The Family’s business</h2>
+    <span class="small-label">EVERY CONTRACT CAN BE COMPLETED SOLO</span>
+  </div>
+  <div class="family-contracts">
+    @for (contract of contracts; track contract.id) {
+      <article
+        class="contract-card panel"
+        [class.contract-claimed]="
+          game.state().claimedFamilyContracts.includes(contract.id)
+        "
+      >
+        <div class="contract-top">
+          <span class="unit-icon"><o-icon [name]="contract.icon" /></span
+          ><span class="mission-tag">{{
+            game.state().claimedFamilyContracts.includes(contract.id)
+              ? "COMPLETED"
+              : "LEVEL " + contract.level + " CONTRACT"
+          }}</span>
+        </div>
+        <h3>{{ contract.name }}</h3>
+        <p>{{ contract.description }}</p>
+        <div class="contract-progress-label">
+          <span
+            >{{ family[contract.metric] | number: "1.0-0" }} /
+            {{ contract.goal | number }}</span
+          ><strong
+            >{{
+              percent(family[contract.metric], contract.goal) | number: "1.0-0"
+            }}%</strong
+          >
+        </div>
+        <div
+          class="xp-track"
+          role="progressbar"
+          [attr.aria-label]="contract.name"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          [attr.aria-valuenow]="percent(family[contract.metric], contract.goal)"
+        >
+          <i
+            [style.width.%]="percent(family[contract.metric], contract.goal)"
+          ></i>
+        </div>
+        <div class="contract-rewards">
+          <span>+{{ contract.xp }} XP</span
+          ><span>+${{ contract.treasury }} TREASURY</span>
+        </div>
+        <button
+          class="button brass full"
+          [disabled]="
+            !!reason({ type: 'claimFamilyContract', target: contract.id })
+          "
+          (click)="
+            game.dispatch({ type: 'claimFamilyContract', target: contract.id })
+          "
+        >
+          {{
+            game.state().claimedFamilyContracts.includes(contract.id)
+              ? "Reward collected"
+              : "Claim contract reward"
+          }}<o-icon
+            [name]="
+              game.state().claimedFamilyContracts.includes(contract.id)
+                ? 'check'
+                : 'arrow'
+            "
+          />
+        </button>
+        @if (
+          reason({ type: "claimFamilyContract", target: contract.id });
+          as explanation
+        ) {
+          <p class="action-hint">{{ explanation }}</p>
+        }
+      </article>
+    }
+  </div>
+  <div class="family-headquarters-grid">
+    <section class="treasury-card panel">
+      <div class="section-heading">
+        <h2><o-icon name="wallet" /> The Family treasury</h2>
+        <span class="small-label">CLEAN MONEY</span>
+      </div>
+      <div class="treasury-balance">
+        ${{ family.treasury | number: "1.0-0" }}
+      </div>
+      <p>
+        Invest in the name. Treasury money buys headquarters upgrades, not
+        personal goods.
+      </p>
+      <form (submit)="contribute($event)">
+        <label for="family-donation">Your contribution</label>
+        <div class="donation-input">
+          <span>$</span
+          ><input
+            id="family-donation"
+            type="number"
+            min="1"
+            step="1"
+            [max]="game.state().clean"
+            [value]="donation()"
+            (input)="setDonation($event)"
+          />
+        </div>
+        <div class="quick-donations">
+          @for (amount of [50, 100, 250, 500]; track amount) {
+            <button
+              type="button"
+              [class.active]="donation() === amount"
+              (click)="donation.set(amount)"
+            >
+              ${{ amount }}
+            </button>
+          }
+        </div>
+        <button
+          class="button brass full"
+          type="submit"
+          [disabled]="
+            !!reason({ type: 'contributeFamily', amount: donation() })
+          "
+        >
+          Contribute to the Family<o-icon name="arrow" />
+        </button>
+        <p class="action-hint">
+          {{
+            reason({ type: "contributeFamily", amount: donation() }) ??
+              "Transferred from your personal clean money. Donations do not create XP."
+          }}
+        </p>
+      </form>
+      <div class="contribution-log">
+        <span class="eyebrow">RECENT CONTRIBUTIONS</span>
+        @for (contribution of family.contributions.slice(0, 4); track $index) {
+          <div>
+            <span>Lisjak · {{ contribution.at | date: "HH:mm" }}</span
+            ><strong>+${{ contribution.amount }}</strong>
+          </div>
+        } @empty {
+          <p>No contributions yet. Every empire needs a backer.</p>
+        }
+      </div>
+    </section>
+    <section class="headquarters-card panel">
+      <div class="section-heading">
+        <h2><o-icon name="building" /> Headquarters upgrades</h2>
+      </div>
+      <p>Level up the Family to unlock advantages for your whole operation.</p>
+      @for (upgrade of upgrades; track upgrade.id) {
+        <article class="headquarters-upgrade">
+          <div class="upgrade-symbol"><o-icon [name]="upgrade.icon" /></div>
+          <div class="upgrade-description">
+            <div>
+              <h3>{{ upgrade.name }}</h3>
+              <span
+                >TIER {{ family.upgrades[upgrade.id] }} /
+                {{ rules.maxUpgrade }}</span
+              >
+            </div>
+            <p>{{ upgrade.description }}</p>
+            <div class="upgrade-pips" aria-hidden="true">
+              @for (tier of [1, 2, 3]; track tier) {
+                <i [class.filled]="family.upgrades[upgrade.id] >= tier"></i>
+              }
+            </div>
+            <button
+              class="button dark"
+              [disabled]="
+                !!reason({ type: 'upgradeFamily', target: upgrade.id })
+              "
+              (click)="
+                game.dispatch({ type: 'upgradeFamily', target: upgrade.id })
+              "
+            >
+              {{
+                family.upgrades[upgrade.id] >= rules.maxUpgrade
+                  ? "Fully upgraded"
+                  : "Upgrade · $" + cost(upgrade.id)
+              }}<o-icon name="plus" />
+            </button>
+            @if (
+              reason({ type: "upgradeFamily", target: upgrade.id });
+              as explanation
+            ) {
+              <span class="action-hint">{{ explanation }}</span>
+            }
+          </div>
+        </article>
+      }
+    </section>
+  </div>
+  <section class="family-members panel">
+    <div class="section-heading">
+      <h2><o-icon name="crew" /> The inner circle</h2>
+      <span class="small-label">ONE MEMBER. PLENTY OF AMBITION.</span>
+    </div>
+    <div class="member-row">
+      <div class="member-avatar">L</div>
+      <div>
+        <strong>Lisjak <span>YOU</span></strong>
+        <p>Founder since {{ family.foundedAt | date: "MMM d" }}</p>
+      </div>
+      <span class="role-badge"><o-icon name="crown" /> DON</span>
+    </div>
+    <p class="action-hint">
+      This is a solo Family prototype saved in this browser. Invitations, real
+      members, shared defense, and chat arrive with the server.
+    </p>
+  </section>
+  <div class="family-bottom-actions">
+    <button class="button brass" (click)="navigate.emit('rackets')">
+      <o-icon name="target" /> Run a job · earn Family XP<o-icon name="arrow" />
+    </button>
+    <details class="disband-details">
+      <summary>Disband this Family</summary>
+      <p>
+        You return to the Independent path. Family XP, treasury, and upgrades
+        are lost. Contracts already claimed stay claimed for this round, even if
+        you found another Family. Personal fronts and crew stay yours.
+      </p>
+      @if (confirmDisband()) {
+        <div class="button-row">
+          <button class="button dark" (click)="confirmDisband.set(false)">
+            Keep my Family</button
+          ><button
+            class="button danger-button"
+            [disabled]="!!reason({ type: 'disbandFamily' })"
+            (click)="disband()"
+          >
+            Yes, disband permanently
+          </button>
+        </div>
+      } @else {
+        <button class="button dark" (click)="confirmDisband.set(true)">
+          Review disband confirmation
+        </button>
+      }
+      @if (reason({ type: "disbandFamily" }); as explanation) {
+        <p class="action-hint">{{ explanation }}</p>
+      }
+    </details>
+  </div>
+} @else {
+  <section class="family-founding panel">
+    <div class="founding-art">
+      <span class="mission-tag">YOUR NEXT CHAPTER</span>
+      <div class="founding-crest"><o-icon [name]="emblem()" /></div>
+      <h2>One name.<br />A whole city<br />to remember it.</h2>
+      <p>Build something bigger than yourself.</p>
+      <div class="founding-art-footer">
+        <span>01 FOUNDER</span><span>NO TRIBUTE</span><span>ALL AMBITION</span>
+      </div>
+    </div>
+    <div class="founding-form">
+      <span class="eyebrow">MAKE IT YOURS</span>
+      <h2>Found your Family.</h2>
+      <p>
+        Start as the Don. Run jobs, earn Family XP, take on contracts, and turn
+        a back room into an institution.
+      </p>
+      <form (submit)="found($event)">
+        <label for="family-name">The name they'll whisper</label
+        ><input
+          id="family-name"
+          type="text"
+          autocomplete="off"
+          minlength="3"
+          maxlength="24"
+          placeholder="e.g. The Blackwater Syndicate"
+          [value]="name()"
+          (input)="setName($event)"
+        /><span class="field-help"
+          >3–24 characters. Your personal progress stays yours.</span
+        ><label>Choose your mark</label>
+        <div class="emblem-options">
+          @for (option of emblems; track option.id) {
+            <button
+              type="button"
+              [class.active]="emblem() === option.id"
+              [attr.aria-pressed]="emblem() === option.id"
+              (click)="emblem.set(option.id)"
+            >
+              <o-icon [name]="option.id" /><span>{{ option.name }}</span>
+            </button>
+          }
+        </div>
+        <button
+          type="submit"
+          class="button brass full"
+          [disabled]="!!reason(createCommand())"
+        >
+          Establish the Family<o-icon name="arrow" />
+        </button>
+        @if (name() && reason(createCommand()); as explanation) {
+          <span class="action-hint">{{ explanation }}</span>
+        }
+      </form>
+      <div class="founding-assurance">
+        <o-icon name="shield" /><span
+          >Free to found. Fully playable with one member.<br />No other players
+          needed to start grinding.</span
+        >
+      </div>
+    </div>
+  </section>
+  <div class="founding-steps">
+    <article class="panel">
+      <span>01</span>
+      <h3>Make your name.</h3>
+      <p>
+        Create a Family with a name and emblem. You're the Don from day one.
+      </p>
+    </article>
+    <article class="panel">
+      <span>02</span>
+      <h3>Work the streets.</h3>
+      <p>Complete jobs for XP. Claim contracts to fill the Family treasury.</p>
+    </article>
+    <article class="panel">
+      <span>03</span>
+      <h3>Build a legacy.</h3>
+      <p>
+        Level up, unlock headquarters upgrades, and grow the whole operation.
+      </p>
+    </article>
+  </div>
+  <p class="prototype-footnote">
+    <o-icon name="lock" /> Solo progression saves in this browser. Real members
+    and faction wars are future chapters.
+  </p>
+}

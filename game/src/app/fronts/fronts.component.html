@@ -1,0 +1,99 @@
+<div class="section-heading">
+  <h2>
+    <o-icon name="building" /> Fronts & operations
+    <span class="count-badge">{{ game.frontCount() }} / 5</span>
+  </h2>
+  <span class="small-label">ONE CONSTRUCTION AT A TIME</span>
+</div>
+<div class="fronts-grid">
+  @for (building of buildings; track building.id) {
+    <article
+      class="front-card panel"
+      [class.unbuilt]="!game.state().buildings[building.id]"
+    >
+      <div class="front-art" [class]="'front-art art-' + building.id">
+        <span class="front-art-icon"><o-icon [name]="building.icon" /></span
+        ><span class="front-level">{{
+          game.state().buildings[building.id]
+            ? "LEVEL " + game.state().buildings[building.id]
+            : "NOT ESTABLISHED"
+        }}</span>
+      </div>
+      <div class="front-content">
+        <span class="eyebrow">{{ building.type }}</span>
+        <h2>{{ building.name }}</h2>
+        <p>{{ building.description }}</p>
+        <div class="front-effect">
+          <o-icon name="plus" />{{ building.effect }}
+        </div>
+        <div class="front-cost">
+          <span
+            ><o-icon name="wallet" /> ${{
+              cost(building.id) | number: "1.0-0"
+            }}</span
+          ><span
+            ><o-icon name="clock" />
+            {{
+              building.seconds * (game.state().buildings[building.id] + 1)
+            }}s</span
+          >
+        </div>
+        <button
+          class="button full"
+          [class.brass]="!game.state().buildings[building.id]"
+          [class.dark]="!!game.state().buildings[building.id]"
+          [disabled]="!!reason({ type: 'build', target: building.id })"
+          [title]="
+            reason({ type: 'build', target: building.id }) ??
+            'Start construction'
+          "
+          (click)="game.dispatch({ type: 'build', target: building.id })"
+        >
+          {{
+            pending("build", building.id)
+              ? "Construction underway…"
+              : game.state().buildings[building.id] >= rules.maxLevel
+                ? "Maximum level"
+                : game.state().buildings[building.id]
+                  ? "Upgrade front"
+                  : "Establish front"
+          }}<o-icon name="arrow" />
+        </button>
+        @if (reason({ type: "build", target: building.id })) {
+          <span class="action-hint">{{
+            reason({ type: "build", target: building.id })
+          }}</span>
+        }
+      </div>
+    </article>
+  }
+</div>
+<section class="panel laundering-panel">
+  <div>
+    <span class="eyebrow">CLEAN BOOKS. QUIET NIGHTS.</span>
+    <h2>The laundering desk</h2>
+    <p>
+      Convert ${{ batch() }} dirty money into ${{
+        batch() * yield() | number: "1.0-0"
+      }}
+      clean money in 20 seconds. Each batch also removes 4 Heat.
+    </p>
+  </div>
+  <button
+    class="button brass"
+    [disabled]="!!reason({ type: 'launder' })"
+    [title]="reason({ type: 'launder' }) ?? 'Start a laundering batch'"
+    (click)="game.dispatch({ type: 'launder' })"
+  >
+    <o-icon name="laundry" />{{
+      pending("launder") ? "Cleaning the books…" : "Launder $" + batch()
+    }}<o-icon name="arrow" />
+  </button>
+  @if (reason({ type: "launder" })) {
+    <span class="action-hint">{{ reason({ type: "launder" }) }}</span>
+  }
+</section>
+<section class="panel operations-panel">
+  <div class="section-heading"><h2>Active operations</h2></div>
+  <o-operations [operations]="game.state().operations" [now]="game.now()" />
+</section>

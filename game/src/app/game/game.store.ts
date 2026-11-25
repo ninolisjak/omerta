@@ -12,111 +12,11 @@ import {
   incomePerMinute,
   storageCap,
 } from "./game.engine";
-import { BUILDINGS, CREW, JOBS } from "./game.config";
+import { migrateSave } from "./game.persistence";
+import { familyLevel } from "./family.engine";
 import type { GameCommand, GameState } from "./game.model";
 
 const SAVE_KEY = "omerta.game.v1";
-
-// localStorage is untrusted input, even for a single-player prototype.
-function validSave(value: unknown): value is GameState {
-  if (!value || typeof value !== "object") return false;
-  const s = value as GameState;
-  const number = (v: unknown) =>
-    typeof v === "number" && Number.isFinite(v) && v >= 0;
-  if (
-    s.version !== 1 ||
-    ![
-      "startedAt",
-      "updatedAt",
-      "roundEndsAt",
-      "nextPoliceAt",
-      "dirty",
-      "clean",
-      "respect",
-      "favors",
-      "heat",
-      "jobsCompleted",
-      "totalLaundered",
-    ].every((key) => number(s[key as keyof GameState]))
-  )
-    return false;
-  if (
-    s.heat > 100 ||
-    s.startedAt > s.updatedAt ||
-    s.updatedAt > s.roundEndsAt ||
-    s.roundEndsAt <= s.startedAt
-  )
-    return false;
-  if (
-    !s.buildings ||
-    !BUILDINGS.every(
-      (b) =>
-        Number.isInteger(s.buildings[b.id]) &&
-        s.buildings[b.id] >= 0 &&
-        s.buildings[b.id] <= 5,
-    )
-  )
-    return false;
-  if (
-    !s.crew ||
-    !CREW.every((c) => Number.isInteger(s.crew[c.id]) && s.crew[c.id] >= 0)
-  )
-    return false;
-  if (
-    !Array.isArray(s.operations) ||
-    s.operations.length > 5 ||
-    !Array.isArray(s.journal) ||
-    s.journal.length > 30
-  )
-    return false;
-  const kinds = new Set<string>();
-  for (const op of s.operations) {
-    if (
-      !op ||
-      !["build", "recruit", "job", "launder", "laylow"].includes(op.kind) ||
-      kinds.has(op.kind) ||
-      typeof op.id !== "string" ||
-      typeof op.label !== "string" ||
-      typeof op.target !== "string" ||
-      !number(op.startedAt) ||
-      !number(op.endsAt) ||
-      op.endsAt <= op.startedAt
-    )
-      return false;
-    kinds.add(op.kind);
-    if (op.kind === "build" && !BUILDINGS.some((b) => b.id === op.target))
-      return false;
-    if (op.kind === "recruit" && !CREW.some((c) => c.id === op.target))
-      return false;
-    if (op.kind === "job" && !JOBS.some((j) => j.id === op.target))
-      return false;
-    if (
-      op.kind === "launder" &&
-      (!number(Number(op.target)) || Number(op.target) > 800)
-    )
-      return false;
-    if (
-      op.crew &&
-      Object.entries(op.crew).some(
-        ([id, count]) =>
-          !CREW.some((c) => c.id === id) ||
-          !Number.isInteger(count) ||
-          count! < 0 ||
-          count! > s.crew[id as keyof typeof s.crew],
-      )
-    )
-      return false;
-  }
-  return s.journal.every(
-    (e) =>
-      e &&
-      typeof e.id === "string" &&
-      number(e.at) &&
-      typeof e.title === "string" &&
-      typeof e.text === "string" &&
-      ["good", "warning", "neutral"].includes(e.tone),
-  );
-}
 
 @Injectable({ providedIn: "root" })
 export class GameStore {
@@ -125,6 +25,11 @@ export class GameStore {
   readonly now = signal(Date.now());
   readonly state = signal(this.load());
   readonly toast = signal<{ text: string; error: boolean } | null>(null);
+  readonly celebration = signal<{
+    title: string;
+    detail: string;
+    levelUp: boolean;
+  } | null>(null);
   readonly income = computed(() => incomePerMinute(this.state()));
   readonly capacity = computed(() => storageCap(this.state()));
   readonly frontCount = computed(
@@ -136,6 +41,7 @@ export class GameStore {
   );
   readonly roundOver = computed(() => this.now() >= this.state().roundEndsAt);
   private toastTimer?: ReturnType<typeof setTimeout>;
+  private rewardTimer?: ReturnType<typeof setTimeout>;
   private lastSave = 0;
 
   constructor() {
@@ -148,6 +54,7 @@ export class GameStore {
     this.destroyRef.onDestroy(() => {
       clearInterval(interval);
       clearTimeout(this.toastTimer);
+      clearTimeout(this.rewardTimer);
       window.removeEventListener("pagehide", save);
     });
   }
@@ -164,7 +71,8 @@ export class GameStore {
     if (raw) {
       try {
         const parsed: unknown = JSON.parse(raw);
-        if (validSave(parsed)) return advanceGame(parsed, Date.now());
+        const migrated = migrateSave(parsed);
+        if (migrated) return advanceGame(migrated, Date.now());
       } catch {
         // Malformed JSON is a damaged save, not a browser-storage failure.
       }
@@ -177,8 +85,15 @@ export class GameStore {
   private tick(): void {
     const now = Date.now();
     this.now.set(now);
-    if (!this.roundOver() || this.state().updatedAt < this.state().roundEndsAt)
-      this.state.update((state) => advanceGame(state, now));
+    if (
+      !this.roundOver() ||
+      this.state().updatedAt < this.state().roundEndsAt
+    ) {
+      const previous = this.state();
+      const next = advanceGame(previous, now);
+      this.state.set(next);
+      this.showReward(previous, next);
+    }
     if (now - this.lastSave >= 5000) this.save();
   }
   private save(): void {
@@ -192,16 +107,47 @@ export class GameStore {
     }
   }
   dispatch(command: GameCommand): void {
-    const result = executeCommand(this.state(), command, Date.now());
+    const previous = this.state();
+    const result = executeCommand(previous, command, Date.now());
     this.state.set(result.state);
     this.save();
+    this.showReward(previous, result.state);
     this.notify(
       result.error ??
-        (command.type === "bribe"
-          ? "The captain appreciates your generosity."
-          : "Word sent. Your operation is underway."),
+        ([
+          "foundFamily",
+          "contributeFamily",
+          "claimFamilyContract",
+          "upgradeFamily",
+          "disbandFamily",
+        ].includes(command.type)
+          ? result.state.journal[0].text
+          : command.type === "bribe"
+            ? "The captain appreciates your generosity."
+            : "Word sent. Your operation is underway."),
       !!result.error,
     );
+  }
+  private showReward(previous: GameState, next: GameState): void {
+    if (previous.journal[0]?.id === next.journal[0]?.id) return;
+    const levelUp =
+      !!previous.family &&
+      !!next.family &&
+      familyLevel(next.family.xp) > familyLevel(previous.family.xp);
+    const completed = previous.operations.some(
+      (op) => !next.operations.some((active) => active.id === op.id),
+    );
+    if (!levelUp && !completed) return;
+    const report = levelUp
+      ? (next.journal.find(
+          (entry) =>
+            entry.title ===
+            `Family level ${familyLevel(next.family!.xp)} unlocked!`,
+        ) ?? next.journal[0])
+      : next.journal[0];
+    this.celebration.set({ title: report.title, detail: report.text, levelUp });
+    clearTimeout(this.rewardTimer);
+    this.rewardTimer = setTimeout(() => this.celebration.set(null), 6000);
   }
   notify(text: string, error = false): void {
     this.toast.set({ text, error });
@@ -209,6 +155,7 @@ export class GameStore {
     this.toastTimer = setTimeout(() => this.toast.set(null), 4500);
   }
   reset(): void {
+    this.celebration.set(null);
     this.state.set(createGame(Date.now()));
     this.now.set(Date.now());
     this.save();

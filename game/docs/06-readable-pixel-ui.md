@@ -2,6 +2,8 @@
 
 The first HUD had a useful layout but its 5–11 pixel labels and low-contrast text were too hard to read. This chapter explains the black-and-white, top-down pixel redesign.
 
+This chapter documents the original light pixel theme. The current dark skin retains these readable sizes and pixel-art principles; [Chapter 9](09-dark-mode-and-game-feedback.md) explains the night palette and new feedback.
+
 ## Save a checkpoint before a redesign
 
 The original game was committed and pushed to `main` on GitHub as `4f81045`. The redesign was started on a separate local branch, `feat/monochrome-pixel-ui`. A branch is a named line of development: the existing checkpoint stays available while the interface changes.

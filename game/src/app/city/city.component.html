@@ -21,6 +21,13 @@
         role="img"
         aria-label="Black-and-white, top-down pixel-art map of 1930s Blackwater: neighborhood streets, City Hall, warehouses, and a working harbor"
       ></div>
+      <div class="city-atmosphere" aria-hidden="true">
+        <div class="rain-layer"></div>
+        <i class="street-walker walker-one"></i
+        ><i class="street-walker walker-two"></i><i class="street-car"></i
+        ><i class="window-glow glow-one"></i><i class="window-glow glow-two"></i
+        ><i class="chimney-smoke"></i>
+      </div>
       @for (district of districts; track district.id) {
         <button
           class="district-pin"
@@ -52,6 +59,14 @@
     </button>
   </div>
   <div class="map-bottom">
+    <span class="city-live"
+      ><i></i>
+      {{
+        activeOperations()
+          ? activeOperations() + " OPERATIONS IN MOTION"
+          : "THE CITY IS AWAKE"
+      }}</span
+    >
     <div class="legend">
       <span><i class="own"></i>Your block</span
       ><span><i class="rival"></i>Rivals</span

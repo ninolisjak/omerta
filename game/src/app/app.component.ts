@@ -5,25 +5,21 @@ import {
   inject,
   signal,
 } from "@angular/core";
-import { DecimalPipe, DatePipe } from "@angular/common";
+import { DecimalPipe } from "@angular/common";
 import { GameStore } from "./game/game.store";
-import { BUILDINGS, CREW, FACTIONS, JOBS, RULES } from "./game/game.config";
-import {
-  availableCrew,
-  buildingCost,
-  commandError,
-  laundryBatch,
-} from "./game/game.engine";
-import type {
-  BuildingId,
-  CrewId,
-  GameCommand,
-  JobDefinition,
-} from "./game/game.model";
+
+import { commandError } from "./game/game.engine";
+import type { GameCommand } from "./game/game.model";
 import { IconComponent } from "./ui/icon.component";
 import { CityComponent } from "./city/city.component";
 import { OperationsComponent } from "./operations/operations.component";
 import { countdown } from "./ui/format";
+import { FrontsComponent } from "./fronts/fronts.component";
+import { CrewComponent } from "./crew/crew.component";
+import { RacketsComponent } from "./rackets/rackets.component";
+import { ReportsComponent } from "./reports/reports.component";
+import { FamilyComponent } from "./family/family.component";
+import { familyProgress } from "./game/family.engine";
 
 type View =
   | "overview"
@@ -37,10 +33,14 @@ type View =
   selector: "omerta-app",
   imports: [
     DecimalPipe,
-    DatePipe,
     IconComponent,
     CityComponent,
     OperationsComponent,
+    FrontsComponent,
+    CrewComponent,
+    RacketsComponent,
+    ReportsComponent,
+    FamilyComponent,
   ],
   templateUrl: "./app.component.html",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,11 +54,32 @@ export class AppComponent {
   readonly rainOn = signal(false);
   readonly motion = signal(true);
   readonly mobileMenu = signal(false);
-  readonly buildings = BUILDINGS;
-  readonly crew = CREW;
-  readonly jobs = JOBS;
-  readonly factions = FACTIONS;
-  readonly rules = RULES;
+  readonly familyProgress = computed(() =>
+    this.game.state().family ? familyProgress(this.game.state().family!) : null,
+  );
+  readonly firstSteps = computed(() => {
+    const s = this.game.state();
+    return [
+      {
+        label: "Open a speakeasy",
+        complete: s.buildings.speakeasy > 0,
+        view: "fronts",
+      },
+      {
+        label: "Clean your first dollars",
+        complete: s.totalLaundered > 0,
+        view: "fronts",
+      },
+      {
+        label: "Finish a street job",
+        complete: s.jobsCompleted > 0,
+        view: "rackets",
+      },
+    ];
+  });
+  readonly onboardingComplete = computed(
+    () => this.firstSteps().filter((step) => step.complete).length,
+  );
   readonly countdown = countdown;
   readonly nav = [
     { id: "overview" as View, label: "Overview", icon: "grid" },
@@ -99,8 +120,8 @@ export class AppComponent {
     },
     family: {
       eyebrow: "BLOOD IS THICKER THAN RAIN",
-      title: "Choose your own kind of loyalty.",
-      subtitle: "For now, you answer to nobody. That has its advantages.",
+      title: "Build a name that outlives you.",
+      subtitle: "One founder. A few loyal men. A whole city to win over.",
     },
     reports: {
       eyebrow: "NOTHING HAPPENS WITHOUT A WHISPER",
@@ -188,7 +209,7 @@ export class AppComponent {
       title: "Give the server authority",
       subtitle: "The next chapter of this project",
       file: "docs/05-the-road-to-multiplayer.md",
-      body: "This version saves locally and simulates a single-player round. A production server must own cash, crew, prices, random outcomes, and time. The Angular store will later send commands to that server and display its response. Families and faction wars come after that foundation.",
+      body: "This version saves locally and includes solo Family progression. A production server must own cash, crew, prices, random outcomes, and time. The Angular store will later send commands to that server and display its response. Real Family membership and faction wars need that foundation.",
       code: "Angular → POST /api/commands\nServer  → validate, lock, resolve, persist\nAngular ← authoritative game snapshot",
       exercise:
         "Read the backend chapter. Sketch a BuildFront request that contains a front ID, but never a price or a claimed balance.",
@@ -201,19 +222,10 @@ export class AppComponent {
   go(id: string): void {
     if (Object.hasOwn(this.headings, id)) this.view.set(id as View);
     this.mobileMenu.set(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-  cost(id: BuildingId): number {
-    return buildingCost(this.game.state(), id);
-  }
-  available(id: CrewId): number {
-    return availableCrew(this.game.state(), id);
+    window.scrollTo({ top: 0, behavior: "instant" });
   }
   reason(command: GameCommand): string | null {
     return commandError(this.game.state(), command);
-  }
-  batch(): number {
-    return laundryBatch(this.game.state());
   }
   pending(kind: string, target?: string): boolean {
     return this.game
@@ -221,14 +233,6 @@ export class AppComponent {
       .operations.some(
         (op) => op.kind === kind && (!target || op.target === target),
       );
-  }
-  jobCrew(job: JobDefinition): string {
-    return Object.entries(job.crew)
-      .map(([name, count]) => `${count} ${name}${count! > 1 ? "s" : ""}`)
-      .join(" + ");
-  }
-  jobSeconds(job: JobDefinition): number {
-    return job.seconds * (this.available("driver") > 0 ? 0.8 : 1);
   }
   age(at: number): string {
     const seconds = Math.max(0, (this.game.now() - at) / 1000);

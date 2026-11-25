@@ -4,7 +4,7 @@ _Keep your mouth shut. Keep your city._
 
 Omertà is a noir mafia strategy game for your browser. It's set in a rain-soaked 1930s port city, and you start with one block and a handful of loyal men. Build fronts, launder your money, run rackets, and watch the Heat. Go it alone as an Independent, or join a Family and take on the rival faction for control of the city. Every round ends with one question: who owns the night?
 
-The description above is the complete game vision. **v0.1 implements the solo foundation.** Multiplayer requires the server described in the [roadmap](docs/05-the-road-to-multiplayer.md).
+The description above is the complete game vision. **v0.2 implements the solo foundation and founder-only Family progression.** Multiplayer requires the server described in the [roadmap](docs/05-the-road-to-multiplayer.md).
 
 ## Run
 
@@ -43,17 +43,25 @@ Timers are intentionally short for learning. A round lasts 21 real days. Offline
 
 ## Learn
 
+The [development phases](docs/development-phases.md) are the working plan for the rest of the project, with checklists and completion criteria. Phases 0, 1, and 2 are implemented. Start with [feature components](docs/07-feature-components.md), [Family progression](docs/08-family-progression.md), and [dark mode and feedback](docs/09-dark-mode-and-game-feedback.md) for the latest changes.
+
 Read [Start here](docs/00-start-here.md), then follow the numbered chapters. The in-game **Learning the ropes?** button gives a short interactive introduction.
 
 ```text
 src/app/
-  app.component.*       Application shell, navigation, feature screens
+  app.component.*       Application shell, navigation, overview, dialogs
+  fronts/, crew/        Front management and recruitment screens
+  rackets/, reports/    Jobs, Heat, and ledger screens
+  family/               Family founding, progression, treasury, contracts
   city/                 Map artwork, district selection, zoom
   operations/           Queue and countdown presentation
   game/
     game.model.ts       TypeScript vocabulary
     game.config.ts      Prices, durations, roles, rewards
     game.engine.ts      Framework-independent rules and time resolution
+    family.config.ts    Levels, contract rewards, headquarters upgrades
+    family.engine.ts    Family validation, progression, and commands
+    game.persistence.ts Save validation and v1-to-v2 migration
     game.store.ts       Angular signals, commands, browser persistence
   ui/                   SVG icons and formatting functions
 tests/                  Rule tests
@@ -62,10 +70,10 @@ docs/                   Lessons, design document, and roadmap
 
 ## Prototype boundaries
 
-Progress is specific to this browser and device. Clearing site data deletes it. Client data and the system clock can be edited; this is **not a cheat-resistant online economy**. Use one tab for a saved game; concurrent tab reconciliation is not implemented. There is no login, cloud sync, PvP, chat, online leaderboard, or Family membership yet. Jobs succeed deterministically; production combat and police randomness need server decisions.
+Progress is specific to this browser and device. Clearing site data deletes it. Client data and the system clock can be edited; this is **not a cheat-resistant online economy**. Use one tab for a saved game; concurrent tab reconciliation is not implemented. You can found a solo Family and grind its progression. Login, cloud sync, PvP, chat, online leaderboards, and real multi-account Family membership are not implemented yet. Jobs succeed deterministically; production combat and police randomness need server decisions.
 
 Settings includes an explicit confirmation before replacing a round. The interface respects reduced motion, uses keyboard-accessible controls, and includes optional procedural rain audio.
 
-The current UI uses a black-and-white handheld-RPG style with larger text and a top-down pixel map. Read [Chapter 6](docs/06-readable-pixel-ui.md) to learn how the redesign works.
+The current UI uses a dark monochrome handheld-RPG style with readable text, a first-night checklist, Family XP bars, completion rewards, and a top-down pixel map with decorative rain, pedestrians, traffic, smoke, and window light. Motion respects Settings and the system's reduced-motion preference. Read [Chapter 9](docs/09-dark-mode-and-game-feedback.md) to learn how it works.
 
 The current generated map is stored in [`public/art/blackwater-pixel.png`](public/art/blackwater-pixel.png). Its tool and production prompt are documented in [assets.md](docs/assets.md). The original painted map is retained as an earlier asset.

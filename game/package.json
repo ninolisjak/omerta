@@ -1,13 +1,13 @@
 {
   "name": "omerta",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "A noir mafia strategy game and an Angular learning project.",
   "scripts": {
     "start": "ng serve --host 127.0.0.1",
     "build": "ng build",
-    "test": "node --experimental-strip-types --test tests/game-engine.test.ts"
+    "test": "node --experimental-strip-types --test tests/game-engine.test.ts tests/family-engine.test.ts tests/game-persistence.test.ts"
   },
   "dependencies": {
     "@angular/common": "^21.2.0",

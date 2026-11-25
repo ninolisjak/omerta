@@ -6,7 +6,7 @@ Goal: understand how browser persistence and the redesigned interface fit around
 
 `GameStore` writes a JSON snapshot under `omerta.game.v1` in `localStorage`. It saves after each command, about every five seconds, and on `pagehide`. Loading validates the snapshot before advancing it to the current time.
 
-The version field gives us a place for future migrations. A new state shape must not silently interpret an old save as the new format. For now, unreadable saves start a fresh round with a visible warning.
+The version field enables explicit migrations. Version 1 saves now migrate to version 2 with empty Family state while preserving personal balances, crew, fronts, reports, and timers. Validation and migration live in `game.persistence.ts`; the storage key remains unchanged for compatibility. Unreadable saves still start a fresh round with a visible warning.
 
 Storage can fail, for example when disabled by browser settings. The store catches that error and shows a warning. Do not assume `localStorage` always succeeds.
 

@@ -1,6 +1,6 @@
 # 5. The road to multiplayer
 
-The first milestone is the playable solo foundation. The PDF's full game is larger than this build. This chapter makes the remaining work explicit.
+The first milestone is the playable solo foundation. The PDF's full game is larger than this build. This chapter explains the backend architecture. Use the [development phases](development-phases.md) as the current step-by-step implementation plan and progress tracker.
 
 ## Implemented now
 
@@ -50,15 +50,9 @@ Keep timestamps in UTC. Return ISO timestamps or epoch milliseconds consistently
 
 Keep faction definitions in configuration and references generic enough for a possible later police faction. Police remain an NPC system at launch.
 
-## Suggested learning milestones
+## Implementation milestones
 
-1. **Accounts and server saves.** Authentication, one authoritative player snapshot, command endpoint, database migrations, tests for concurrent spending and duplicate commands.
-2. **World and travel.** Coordinate-based travel, separate shipments, NPC targets, combat resolution, casualties, battle reports. Replace deterministic solo outcomes with persisted server decisions.
-3. **Shared rounds.** Shared calendar, individual rankings, round finalization once, a new round without erasing past history.
-4. **Families.** Invitations, roles, shared defense, tribute, joint heists, and chat permissions.
-5. **Faction territory.** Old Guard versus New Blood, territory scoring, comeback rules, high-value district ownership, Family and faction rankings.
-6. **Balance and retention.** Real production durations, playtesting, onboarding, observability, accessibility audit, and abuse controls.
-7. **Optional later content.** Cosmetics without power sales; casino, funeral parlor, corrupt cop, lawyer, lieutenants. Consider playable police only after the core proves itself.
+The [development phases](development-phases.md) put local Family creation and progression immediately after Angular component cleanup, so a founder can test grinding Family XP, contracts, treasury contributions, and upgrades before multiplayer exists. Backend/accounts and authoritative personal/Family rules follow, then world/travel, shared rounds, PvP with Family combat cooperation, factions, and release preparation. Each phase has a checklist, a learning objective, and a completion check.
 
 Do not start by implementing every screen on this list. Take one authoritative action from Angular to the database and back, test it, then move the remaining solo commands behind the same interface.
 

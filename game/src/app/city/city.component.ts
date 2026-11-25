@@ -27,6 +27,7 @@ export interface District {
 })
 export class CityComponent {
   readonly expanded = input(false);
+  readonly activeOperations = input(0);
   readonly navigate = output<string>();
   readonly zoom = signal(1);
   readonly selected = signal("italy");

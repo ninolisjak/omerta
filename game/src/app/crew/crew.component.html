@@ -1,0 +1,67 @@
+<div class="crew-banner panel">
+  <div class="large-symbol"><o-icon name="crew" /></div>
+  <div>
+    <span class="eyebrow">THE LISJAK CREW</span>
+    <h2>{{ game.crewCount() }} men. One word: loyalty.</h2>
+    <p>
+      Crew assigned to a job return when it finishes. An available driver joins
+      automatically and shortens travel by 20%.
+    </p>
+  </div>
+</div>
+@if (!game.state().buildings.poolhall) {
+  <div class="notice">
+    <o-icon name="lock" />
+    <p>
+      Recruitment needs a home. Build
+      <strong>Eight Ball Social</strong> to start training your crew.
+    </p>
+    <button class="text-button" (click)="navigate.emit('fronts')">
+      View fronts<o-icon name="arrow" />
+    </button>
+  </div>
+}
+<div class="crew-grid">
+  @for (unit of crew; track unit.id) {
+    <article class="crew-card panel">
+      <div class="crew-card-top">
+        <div class="unit-icon"><o-icon [name]="unit.icon" /></div>
+        <div class="unit-count">
+          {{ available(unit.id)
+          }}<span>/ {{ game.state().crew[unit.id] }} AVAILABLE</span>
+        </div>
+      </div>
+      <span class="eyebrow">{{ unit.role }}</span>
+      <h2>{{ unit.name }}</h2>
+      <p>{{ unit.description }}</p>
+      <div class="front-cost">
+        <span><o-icon name="wallet" /> ${{ unit.cost }}</span
+        ><span><o-icon name="clock" /> {{ unit.seconds }}s base</span>
+      </div>
+      <button
+        class="button dark full"
+        [disabled]="!!reason({ type: 'recruit', target: unit.id })"
+        [title]="
+          reason({ type: 'recruit', target: unit.id }) ??
+          'Train one ' + unit.name
+        "
+        (click)="game.dispatch({ type: 'recruit', target: unit.id })"
+      >
+        {{
+          pending("recruit", unit.id)
+            ? "Training…"
+            : "Recruit " + unit.name.toLowerCase()
+        }}<o-icon name="plus" />
+      </button>
+      @if (reason({ type: "recruit", target: unit.id })) {
+        <span class="action-hint">{{
+          reason({ type: "recruit", target: unit.id })
+        }}</span>
+      }
+    </article>
+  }
+</div>
+<section class="panel operations-panel">
+  <div class="section-heading"><h2>Active operations</h2></div>
+  <o-operations [operations]="game.state().operations" [now]="game.now()" />
+</section>

@@ -4,7 +4,7 @@ Goal: understand what happens when you click **Establish front**.
 
 ## Start in the template
 
-Open `src/app/app.component.html` and find the fronts screen. Its `@for` repeats one card per item in `buildings`. This list comes from `BUILDINGS` in `game.config.ts`.
+Open `src/app/fronts/fronts.component.html`. Its `@for` repeats one card per item in `buildings`. This list comes from `BUILDINGS` in `game.config.ts`. The screen now has its own standalone component, imported by the application shell; [Chapter 7](07-feature-components.md) explains that extraction.
 
 The button's important binding is:
 

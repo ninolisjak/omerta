@@ -219,6 +219,108 @@ try {
     .click();
   await page.getByRole("button", { name: "Yes, start a new round" }).click();
   assert.match(await page.locator(".resource").first().innerText(), /2,450/);
+  await page.setViewportSize({ width: 1440, height: 1080 });
+  await page
+    .locator(".sidebar")
+    .getByRole("button", { name: "The Families", exact: false })
+    .click();
+  await page.screenshot({
+    path: ".local/screenshots/family-founding.png",
+    fullPage: true,
+  });
+  await page
+    .getByLabel("The name they'll whisper")
+    .fill("Blackwater Syndicate");
+  await page.getByRole("button", { name: "Establish the Family" }).click();
+  await expect(page.locator(".family-hero h2")).toHaveText(
+    "Blackwater Syndicate",
+  );
+  await page
+    .locator(".sidebar")
+    .getByRole("button", { name: "Rackets & jobs", exact: false })
+    .click();
+  for (let job = 0; job < 3; job++) {
+    await page
+      .locator(".job-card")
+      .first()
+      .getByRole("button", { name: "Send the crew" })
+      .click();
+    await page.clock.fastForward(25_000);
+    await expect(
+      page
+        .locator(".job-card")
+        .first()
+        .getByRole("button", { name: "Send the crew" }),
+    ).toBeEnabled();
+  }
+  await expect(page.locator(".family-progress-strip .level-chip")).toHaveText(
+    "LV. 2",
+  );
+  await expect(page.locator(".reward-popup.level-up")).toBeVisible();
+  await page
+    .locator(".sidebar")
+    .getByRole("button", { name: "The Families", exact: false })
+    .click();
+  await page
+    .locator(".contract-card")
+    .first()
+    .getByRole("button", { name: "Claim contract reward" })
+    .click();
+  await expect(page.locator(".treasury-balance")).toContainText("250");
+  await page
+    .locator(".headquarters-upgrade")
+    .first()
+    .getByRole("button", { name: "Upgrade · $200" })
+    .click();
+  await expect(page.locator(".headquarters-upgrade").first()).toContainText(
+    "TIER 1 / 3",
+  );
+  await expect(page.locator(".treasury-balance")).toContainText("50");
+  await page.getByLabel("Your contribution").fill("100");
+  await page.getByRole("button", { name: "Contribute to the Family" }).click();
+  await expect(page.locator(".treasury-balance")).toContainText("150");
+  await page.reload();
+  await page
+    .locator(".sidebar")
+    .getByRole("button", { name: "The Families", exact: false })
+    .click();
+  await expect(page.locator(".family-hero h2")).toHaveText(
+    "Blackwater Syndicate",
+  );
+  await expect(page.locator(".treasury-balance")).toContainText("150");
+  await expect(
+    page
+      .locator(".contract-card")
+      .first()
+      .getByRole("button", { name: "Reward collected" }),
+  ).toBeDisabled();
+  await page.locator("main h1").click();
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+  await page.screenshot({
+    path: ".local/screenshots/family-desktop.png",
+    fullPage: true,
+  });
+  for (const width of [1920, 1440, 1024, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 940 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+      true,
+      `Active Family overflows at ${width}px`,
+    );
+    if (width === 390) {
+      await page.locator("main h1").click();
+      await page.evaluate(() =>
+        window.scrollTo({ top: 0, behavior: "instant" }),
+      );
+      await page.screenshot({
+        path: ".local/screenshots/family-mobile.png",
+        fullPage: true,
+      });
+    }
+  }
+  await page.setViewportSize({ width: 1440, height: 1080 });
   // Seed damage before application startup, after the old page's pagehide save.
   await page.addInitScript(() =>
     localStorage.setItem("omerta.game.v1", "{invalid-json"),
@@ -228,9 +330,34 @@ try {
     "saved game was unreadable",
   );
   await expect(page.locator(".resource").first()).toContainText("2,450");
+  const motionPage = await context.newPage();
+  await motionPage.emulateMedia({ reducedMotion: "no-preference" });
+  await motionPage.goto(origin);
+  await expect(motionPage.locator(".rain-layer")).toHaveCSS(
+    "animation-name",
+    "rain-fall",
+  );
+  await motionPage.getByRole("button", { name: "Open settings" }).click();
+  await motionPage.getByRole("switch", { name: "Atmosphere motion" }).click();
+  await expect(motionPage.locator(".rain-layer")).toHaveCSS(
+    "animation-name",
+    "none",
+  );
+  await motionPage.getByRole("switch", { name: "Atmosphere motion" }).click();
+  await expect(motionPage.locator(".rain-layer")).toHaveCSS(
+    "animation-name",
+    "rain-fall",
+  );
+  await motionPage.keyboard.press("Escape");
+  await motionPage.emulateMedia({ reducedMotion: "reduce" });
+  await expect(motionPage.locator(".rain-layer")).toHaveCSS(
+    "animation-name",
+    "none",
+  );
+  await motionPage.close();
   assert.equal(errors.length, 0, `Browser errors: ${errors.join("; ")}`);
   console.log(
-    "PASS: map, build, laundering, job, reload, guide, reset, save recovery; all seven views at six widths; text >=12px; no browser errors.",
+    "PASS: solo loop, Family founding, XP, level-up, contract, upgrade, contribution, reload, save recovery; all screens at six widths; text >=12px; no browser errors.",
   );
   console.log("Screenshots: .local/screenshots/desktop.png and mobile.png");
 } finally {
